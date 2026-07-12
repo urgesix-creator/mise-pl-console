@@ -6,7 +6,7 @@ import { DepartmentsClient } from './_components/departments-client';
 import type { SalesDepartment } from './_components/types';
 
 export const metadata = {
-  title: '部門マスタ | Sales Console',
+  title: '部門マスタ | みせPL',
 };
 
 type PageProps = {

@@ -7,7 +7,7 @@ import { resolveSelectedStoreId } from '@/lib/stores/selected-store';
 import { type DayPeriod } from './_schemas';
 
 export const metadata = {
-  title: '日次売上入力 | Sales Console',
+  title: '日次売上入力 | みせPL',
 };
 
 type SearchParams = { [key: string]: string | string[] | undefined };

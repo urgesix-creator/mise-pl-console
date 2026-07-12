@@ -6,7 +6,7 @@ import { CategoriesClient } from './_components/categories-client';
 import type { CategoryWithSupplierCount } from './_components/types';
 
 export const metadata = {
-  title: '仕入カテゴリ | Sales Console',
+  title: '仕入カテゴリ | みせPL',
 };
 
 type PageProps = {

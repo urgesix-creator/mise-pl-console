@@ -18,7 +18,7 @@ import type { CategoryTag } from './_lib/expense-constants';
 import type { CalcType } from './_lib/formula-constants';
 
 export const metadata = {
-  title: '月次PL（損益） | Sales Console',
+  title: '月次PL（損益） | みせPL',
 };
 
 type SearchParams = { [key: string]: string | string[] | undefined };

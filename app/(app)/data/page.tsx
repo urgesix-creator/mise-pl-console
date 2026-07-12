@@ -11,7 +11,7 @@ import type {
 } from './_components/types';
 
 export const metadata = {
-  title: 'データ閲覧 | Sales Console',
+  title: 'データ閲覧 | みせPL',
 };
 
 type SearchParams = { [key: string]: string | string[] | undefined };

@@ -141,7 +141,7 @@ export function ManualDoc({
         </div>
         <p className="text-sm text-slate-600 mt-3 leading-relaxed">{intro}</p>
         <div className="mt-3 text-[11px] text-slate-400 font-num">
-          KOGA Holdings · Sales Console ／ 最終更新 {updated}
+          みせPL ／ 最終更新 {updated}
         </div>
       </header>
 
@@ -178,9 +178,9 @@ export function ManualDoc({
       </div>
 
       <footer className="mt-12 pt-5 border-t border-slate-200 text-[11px] text-slate-400 leading-relaxed">
-        本マニュアルは Sales Console の現行仕様に基づきます。仕様変更時は内容が更新されます。
+        本マニュアルは みせPL の現行仕様に基づきます。仕様変更時は内容が更新されます。
         記載と実画面が食い違う場合は、実画面の動作と社内の最新指示を優先してください。
-        <br />© KOGA Holdings — 海外飲食店 売上管理システム（Sales Console）
+        <br />© みせPL — 店舗PLダッシュボード
       </footer>
     </div>
   );

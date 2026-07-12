@@ -6,7 +6,7 @@ import { SuppliersClient } from './_components/suppliers-client';
 import type { Role, SupplierWithMeta } from './_components/types';
 
 export const metadata = {
-  title: '仕入先マスタ | Sales Console',
+  title: '仕入先マスタ | みせPL',
 };
 
 type PageProps = {

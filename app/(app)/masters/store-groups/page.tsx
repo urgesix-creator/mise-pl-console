@@ -5,7 +5,7 @@ import { StoreGroupsClient } from './_components/store-groups-client';
 import type { GroupStore, StoreGroupWithMembers } from './_components/types';
 
 export const metadata = {
-  title: '店舗グループ | Sales Console',
+  title: '店舗グループ | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

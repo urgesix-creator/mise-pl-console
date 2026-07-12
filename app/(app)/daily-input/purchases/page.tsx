@@ -13,7 +13,7 @@ import { PurchasesInputClient } from './_components/purchases-input-client';
 import { resolveSelectedStoreId } from '@/lib/stores/selected-store';
 
 export const metadata = {
-  title: '日次仕入入力 | Sales Console',
+  title: '日次仕入入力 | みせPL',
 };
 
 type SearchParams = { [key: string]: string | string[] | undefined };

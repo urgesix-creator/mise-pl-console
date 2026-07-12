@@ -4,7 +4,7 @@ import { ROLE_LABELS, type Role } from '@/lib/permissions/constants';
 import { ProfileClient } from './_components/profile-client';
 
 export const metadata = {
-  title: 'プロフィール | Sales Console',
+  title: 'プロフィール | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

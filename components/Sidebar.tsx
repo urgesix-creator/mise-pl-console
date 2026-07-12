@@ -210,7 +210,7 @@ export function Sidebar({ userRole, capabilities, mobileOpen, onMobileClose }: S
 
           <div className="pt-4 border-t border-slate-100">
             <div className="px-3 text-[10px] text-slate-400 leading-relaxed">
-              KOGA Holdings · Sales Console
+              みせPL
               <br />
               Phase B.1
             </div>

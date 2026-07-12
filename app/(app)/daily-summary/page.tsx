@@ -4,7 +4,7 @@ import { resolveSelectedStoreId } from '@/lib/stores/selected-store';
 import { DailySummaryClient, type DailyRow, type StoreLite } from './_components/daily-summary-client';
 
 export const metadata = {
-  title: '日別売上 | Sales Console',
+  title: '日別売上 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

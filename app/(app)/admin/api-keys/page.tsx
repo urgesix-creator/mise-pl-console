@@ -5,7 +5,7 @@ import { roleHasCapability } from '@/lib/permissions/server';
 import { ApiKeysClient, type ApiKeyRow } from './_components/api-keys-client';
 
 export const metadata = {
-  title: 'APIキー | Sales Console',
+  title: 'APIキー | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

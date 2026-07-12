@@ -1,7 +1,7 @@
 import { ManualDoc, type Section } from '../_components/manual-ui';
 
 export const metadata = {
-  title: '設定マニュアル | Sales Console',
+  title: '設定マニュアル | みせPL',
 };
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         k: 'p',
-        text: '本書は Sales Console（KOGAホールディングス 海外飲食店 売上管理システム）を新しく使い始めるとき、または設定を見直すときの「設定マニュアル」です。日々の入力・閲覧の操作は別冊「運用マニュアル」をご覧ください。',
+        text: '本書は みせPL（店舗PLダッシュボード）を新しく使い始めるとき、または設定を見直すときの「設定マニュアル」です。日々の入力・閲覧の操作は別冊「運用マニュアル」をご覧ください。',
       },
       {
         k: 'p',
@@ -394,7 +394,7 @@ export default function SetupManualPage() {
     <ManualDoc
       kicker="Manual · Setup"
       title="設定マニュアル"
-      intro="Sales Console を使い始める／設定を見直すための手引きです。マスタ・ユーザー・権限・為替・税計算などの初期設定をまとめています。"
+      intro="みせPL を使い始める／設定を見直すための手引きです。マスタ・ユーザー・権限・為替・税計算などの初期設定をまとめています。"
       updated="2026-06"
       sections={SECTIONS}
     />

@@ -114,7 +114,7 @@ export function buildDailyReportMessage(params: {
       {
         type: 'context',
         elements: [
-          { type: 'mrkdwn', text: '🤖 Sales Console / KOGA Holdings' },
+          { type: 'mrkdwn', text: '🤖 みせPL' },
         ],
       },
     ],
@@ -175,7 +175,7 @@ export function buildAlertMessage(params: {
   blocks.push({
     type: 'context',
     elements: [
-      { type: 'mrkdwn', text: `🤖 Sales Console / Alert at ${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}` },
+      { type: 'mrkdwn', text: `🤖 みせPL / Alert at ${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}` },
     ],
   });
 

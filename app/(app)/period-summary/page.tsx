@@ -4,7 +4,7 @@ import { getPeriodSummary } from './actions';
 import { PeriodSummaryClient } from './_components/period-summary-client';
 
 export const metadata = {
-  title: '店舗別 期間集計 | Sales Console',
+  title: '店舗別 期間集計 | みせPL',
 };
 
 // 日次データはアプリ外でも更新され得るため常に最新を取得

@@ -1,7 +1,7 @@
 import { ManualDoc, type Section } from '../_components/manual-ui';
 
 export const metadata = {
-  title: '運用マニュアル | Sales Console',
+  title: '運用マニュアル | みせPL',
 };
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         k: 'p',
-        text: '本書は Sales Console を日々使うための「運用マニュアル」です。ログイン、ダッシュボードの見方、日次入力、各種集計・PLの確認手順をまとめています。初期セットアップ（マスタ・権限・為替・税計算の前提）は別冊「設定マニュアル」をご覧ください。',
+        text: '本書は みせPL を日々使うための「運用マニュアル」です。ログイン、ダッシュボードの見方、日次入力、各種集計・PLの確認手順をまとめています。初期セットアップ（マスタ・権限・為替・税計算の前提）は別冊「設定マニュアル」をご覧ください。',
       },
       {
         k: 'note',
@@ -334,7 +334,7 @@ export default function OperationsManualPage() {
     <ManualDoc
       kicker="Manual · Operations"
       title="運用マニュアル"
-      intro="Sales Console を日々使うための手引きです。ログイン・ダッシュボード・日次入力・各種集計やPLの確認手順をまとめています。"
+      intro="みせPL を日々使うための手引きです。ログイン・ダッシュボード・日次入力・各種集計やPLの確認手順をまとめています。"
       updated="2026-06"
       sections={SECTIONS}
     />

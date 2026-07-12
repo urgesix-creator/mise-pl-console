@@ -5,7 +5,7 @@ import { PurchaseSummaryClient } from './_components/purchase-summary-client';
 import type { PurchaseGroup, PurchaseRow, StoreOption } from './_components/types';
 
 export const metadata = {
-  title: '仕入先別 仕入集計 | Sales Console',
+  title: '仕入先別 仕入集計 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

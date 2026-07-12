@@ -50,7 +50,7 @@ export function AppShell({ children, profile, capabilities }: AppShellProps) {
             <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
               <Image
                 src="/koga-group-logo.png"
-                alt="KOGA Group"
+                alt="みせPL"
                 width={840}
                 height={600}
                 className="h-9 w-auto flex-shrink-0"
@@ -58,10 +58,10 @@ export function AppShell({ children, profile, capabilities }: AppShellProps) {
               />
               <div className="hidden sm:block min-w-0">
                 <div className="font-display text-sm font-bold text-slate-900 leading-tight truncate">
-                  KOGA Holdings
+                  みせPL
                 </div>
                 <div className="text-[10px] tracking-widest uppercase text-slate-500">
-                  Sales Console
+                  みせPL
                 </div>
               </div>
             </Link>

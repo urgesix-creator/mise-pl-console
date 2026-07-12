@@ -5,7 +5,7 @@ import type { CurrencyWithMeta, RatePairWithMeta, Role } from './_components/typ
 import { QUOTE_CURRENCY_ID, STALE_THRESHOLD_DAYS } from './_schemas';
 
 export const metadata = {
-  title: '為替レート | Sales Console',
+  title: '為替レート | みせPL',
 };
 
 // 通貨マスタはマイグレーションで DB 直追加され得る（アプリ外で更新）。

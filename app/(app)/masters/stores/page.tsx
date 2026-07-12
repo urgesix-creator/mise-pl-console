@@ -4,7 +4,7 @@ import { roleHasCapability } from '@/lib/permissions/server';
 import { StoresClient } from './_components/stores-client';
 
 export const metadata = {
-  title: '店舗マスタ | Sales Console',
+  title: '店舗マスタ | みせPL',
 };
 
 // 国・通貨マスタ等はマイグレーションで DB 直追加され得る（アプリ外で更新）。

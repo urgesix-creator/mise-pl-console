@@ -5,7 +5,7 @@ import { CountriesClient } from './_components/countries-client';
 import type { CountryWithMeta } from './_components/types';
 
 export const metadata = {
-  title: '国マスタ | Sales Console',
+  title: '国マスタ | みせPL',
 };
 
 // 国マスタはマイグレーションで DB 直追加され得る（アプリ外で更新）。

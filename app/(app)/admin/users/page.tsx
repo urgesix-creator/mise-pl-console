@@ -7,7 +7,7 @@ import { UsersClient } from './_components/users-client';
 import type { CountryOption, StoreOption, UserRow } from './_components/types';
 
 export const metadata = {
-  title: 'ユーザー管理 | Sales Console',
+  title: 'ユーザー管理 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

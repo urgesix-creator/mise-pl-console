@@ -72,15 +72,15 @@ export default function LoginPage() {
           <div className="flex items-center gap-4 mb-8">
             <Image
               src="/koga-group-logo.png"
-              alt="KOGA Group"
+              alt="みせPL"
               width={840}
               height={600}
               className="h-14 w-auto"
               priority
             />
             <div>
-              <div className="font-display text-base font-bold tracking-tight">KOGA Holdings</div>
-              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">Sales Console</div>
+              <div className="font-display text-base font-bold tracking-tight">みせPL</div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">みせPL</div>
             </div>
           </div>
 
@@ -92,23 +92,23 @@ export default function LoginPage() {
 
         <div className="relative">
           <h1 className="font-display text-4xl xl:text-5xl font-bold leading-[1.1] mb-6 anim-in anim-delay-100">
-            海外飲食店の
+            店舗経営の
             <br />
             <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
               リアルタイム
             </span>
             <br />
-            経営管理
+            月次PL自動化
           </h1>
           <p className="text-base text-white/70 leading-relaxed mb-8 max-w-md anim-in anim-delay-200">
-            タイ・インドネシアの飲食店オペレーションを、現場入力から本部分析までシームレスに繋ぐ統合プラットフォーム。
+            飲食店の日次オペレーションを、現場入力から本部分析までシームレスに繋ぐ店舗PLダッシュボード。
           </p>
 
           <div className="grid grid-cols-2 gap-3 max-w-md anim-in anim-delay-300">
             <FeatureBox icon={Activity} label="日次入力" sub="現場店長による即時入力" />
             <FeatureBox icon={Zap} label="リアルタイム" sub="経営層へSlack日報自動配信" />
-            <FeatureBox icon={Globe} label="多通貨対応" sub="THB / IDR / JPY" />
-            <FeatureBox icon={Shield} label="安全な認証" sub="メール＋PW + 2FA" />
+            <FeatureBox icon={Globe} label="月次PL" sub="FL比率・原価率を自動集計" />
+            <FeatureBox icon={Shield} label="安全な認証" sub="メール＋パスワード" />
           </div>
         </div>
 
@@ -128,14 +128,14 @@ export default function LoginPage() {
         <header className="lg:hidden border-b border-slate-200 px-5 py-4 flex items-center gap-3">
           <Image
             src="/koga-group-logo.png"
-            alt="KOGA Group"
+            alt="みせPL"
             width={840}
             height={600}
             className="h-9 w-auto"
           />
           <div>
-            <div className="font-display text-sm font-bold text-slate-900 leading-tight">KOGA Holdings</div>
-            <div className="text-[10px] tracking-widest uppercase text-slate-500">Sales Console</div>
+            <div className="font-display text-sm font-bold text-slate-900 leading-tight">みせPL</div>
+            <div className="text-[10px] tracking-widest uppercase text-slate-500">みせPL</div>
           </div>
         </header>
 
@@ -245,7 +245,7 @@ export default function LoginPage() {
 
         <footer className="border-t border-slate-100 px-5 sm:px-8 py-5">
           <div className="max-w-sm mx-auto flex items-center justify-between text-xs text-slate-500">
-            <div>© 2026 KOGA Holdings</div>
+            <div>© 2026 みせPL</div>
             <div className="flex items-center gap-3">
               <span>プライバシー</span>
               <span className="text-slate-300">·</span>

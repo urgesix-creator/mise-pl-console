@@ -6,7 +6,7 @@ import { InitialSetupClient } from './_components/initial-setup-client';
 import type { Store, Role } from '@/app/(app)/data/_components/types';
 
 export const metadata = {
-  title: '初期設定 | Sales Console',
+  title: '初期設定 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

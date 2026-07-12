@@ -11,7 +11,7 @@ import { TargetsTabBar } from './_components/targets-tab-bar';
 import type { StoreLite } from './_components/types';
 
 export const metadata = {
-  title: '売上予算 | Sales Console',
+  title: '売上予算 | みせPL',
 };
 
 type SearchParams = { [key: string]: string | string[] | undefined };

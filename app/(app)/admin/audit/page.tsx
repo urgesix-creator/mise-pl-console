@@ -5,7 +5,7 @@ import { roleHasCapability } from '@/lib/permissions/server';
 import { AuditClient, type AuditLogRow } from './_components/audit-client';
 
 export const metadata = {
-  title: '監査ログ | Sales Console',
+  title: '監査ログ | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

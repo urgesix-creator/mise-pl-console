@@ -5,7 +5,7 @@ import { roleHasCapability, fetchPermissionMatrix } from '@/lib/permissions/serv
 import { PermissionsClient } from './_components/permissions-client';
 
 export const metadata = {
-  title: '権限設定 | Sales Console',
+  title: '権限設定 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

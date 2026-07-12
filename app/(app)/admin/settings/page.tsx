@@ -13,7 +13,7 @@ const ADMIN_LINKS: { href: string; label: string; desc: string; capability: Capa
 ];
 
 export const metadata = {
-  title: 'システム設定 | Sales Console',
+  title: 'システム設定 | みせPL',
 };
 
 export const dynamic = 'force-dynamic';

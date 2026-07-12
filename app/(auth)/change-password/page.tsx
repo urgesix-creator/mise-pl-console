@@ -69,15 +69,15 @@ export default function ChangePasswordPage() {
           <div className="flex items-center gap-4 mb-8">
             <Image
               src="/koga-group-logo.png"
-              alt="KOGA Group"
+              alt="みせPL"
               width={840}
               height={600}
               className="h-14 w-auto"
               priority
             />
             <div>
-              <div className="font-display text-base font-bold tracking-tight">KOGA Holdings</div>
-              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">Sales Console</div>
+              <div className="font-display text-base font-bold tracking-tight">みせPL</div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">みせPL</div>
             </div>
           </div>
         </div>
@@ -115,14 +115,14 @@ export default function ChangePasswordPage() {
         <header className="lg:hidden border-b border-slate-200 px-5 py-4 flex items-center gap-3">
           <Image
             src="/koga-group-logo.png"
-            alt="KOGA Group"
+            alt="みせPL"
             width={840}
             height={600}
             className="h-9 w-auto"
           />
           <div>
-            <div className="font-display text-sm font-bold text-slate-900 leading-tight">KOGA Holdings</div>
-            <div className="text-[10px] tracking-widest uppercase text-slate-500">Sales Console</div>
+            <div className="font-display text-sm font-bold text-slate-900 leading-tight">みせPL</div>
+            <div className="text-[10px] tracking-widest uppercase text-slate-500">みせPL</div>
           </div>
         </header>
 
@@ -254,7 +254,7 @@ export default function ChangePasswordPage() {
 
         <footer className="border-t border-slate-100 px-5 sm:px-8 py-5">
           <div className="max-w-sm mx-auto flex items-center justify-between text-xs text-slate-500">
-            <div>© 2026 KOGA Holdings</div>
+            <div>© 2026 みせPL</div>
             <div className="flex items-center gap-3">
               <span>プライバシー</span>
               <span className="text-slate-300">·</span>
