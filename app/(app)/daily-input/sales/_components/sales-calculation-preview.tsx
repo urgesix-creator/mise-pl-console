@@ -57,10 +57,13 @@ export function SalesCalculationPreview({
   const avgPerCustomer = calc.avg_per_customer;
   const avgPerCustomerNet = calcAvgPerCustomer(netSales, customerCount);
 
-  // 整合性は「桁違い警告」のみ（data_model_v1.7 §8.1.1）。保存はブロックしない
+  // 整合性は「桁違い警告」のみ（data_model_v1.7 §8.1.1）。保存はブロックしない。
+  // 総売上が未入力（0以下）のときは表示上の既定値（net+tax = calc.gross_sales）で判定する。
+  // 生の gross(0) で判定すると比率0となり誤って警告が出るため（表示専用の補正）。
+  const effectiveGross = grossSales > 0 ? grossSales : calc.gross_sales;
   const digitWarning = useMemo(
-    () => grossNetDigitWarning(grossSales, netSales),
-    [grossSales, netSales],
+    () => grossNetDigitWarning(effectiveGross, netSales),
+    [effectiveGross, netSales],
   );
 
   return (
