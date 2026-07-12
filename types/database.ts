@@ -95,7 +95,8 @@ export type Database = {
           display_order: number;
           purchase_tax_input_mode: 'excluded' | 'included'; // 仕入入力モード（税抜/税込・店舗単位で共有）
           purchase_tax_rate_default: number; // 店舗標準の仕入税率(%)。取引先未設定時の既定
-          sales_service_fee_input_mode: 'excluded' | 'included'; // 売上入力モード（サービス料別/込み・店舗単位で共有）
+          sales_service_fee_input_mode: 'excluded' | 'included'; // 売上入力モード（サービス料別/込み・店舗単位で共有・消費税制では未使用）
+          has_takeout: boolean; // 軽減税率（テイクアウト8%）を使う店舗か。true のとき税区分セレクタを表示
           created_at: string;
           updated_at: string;
         };
@@ -106,6 +107,7 @@ export type Database = {
           | 'purchase_tax_input_mode'
           | 'purchase_tax_rate_default'
           | 'sales_service_fee_input_mode'
+          | 'has_takeout'
           | 'created_at'
           | 'updated_at'
         > & {
@@ -114,6 +116,7 @@ export type Database = {
           purchase_tax_input_mode?: 'excluded' | 'included'; // 既定 'excluded'
           purchase_tax_rate_default?: number; // 既定 0
           sales_service_fee_input_mode?: 'excluded' | 'included'; // 既定 'excluded'
+          has_takeout?: boolean; // 既定 false
           created_at?: string;
           updated_at?: string;
         };
@@ -333,20 +336,22 @@ export type Database = {
           net_sales: number;
           service_fee: number;
           tax_amount: number;
+          tax_category: 'standard' | 'reduced'; // 売上の税区分（standard=10% / reduced=8%）。既定 standard
           customer_count: number;
           weather: string | null;
           event_note: string | null;
           is_closed: boolean;
           is_holiday: boolean;
           holiday_name: string | null;
-          service_fee_included: boolean; // この行の入力モード（true=サービス料込み）。既定false=従来「別」
+          service_fee_included: boolean; // この行の入力モード（true=サービス料込み）。既定false=従来「別」。消費税制では未使用
           created_at: string;
           updated_at: string;
         };
         Insert: Omit<
           Database['public']['Tables']['daily_sales']['Row'],
-          'id' | 'is_closed' | 'is_holiday' | 'holiday_name' | 'service_fee_included' | 'created_at' | 'updated_at'
+          'id' | 'tax_category' | 'is_closed' | 'is_holiday' | 'holiday_name' | 'service_fee_included' | 'created_at' | 'updated_at'
         > & {
+          tax_category?: 'standard' | 'reduced'; // 既定 standard
           is_closed?: boolean;
           is_holiday?: boolean;
           holiday_name?: string | null;
