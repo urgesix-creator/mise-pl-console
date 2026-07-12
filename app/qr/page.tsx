@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Smartphone, ScanLine, Printer } from 'lucide-react';
 import { loginUrl } from '@/lib/site';
@@ -29,20 +28,15 @@ export default async function QrLoginPage() {
       <div className="w-full max-w-md">
         {/* ロゴ */}
         <div className="flex items-center justify-center gap-3 mb-8 print:mb-4">
-          <Image
-            src="/koga-group-logo.png"
-            alt="みせPL"
-            width={840}
-            height={600}
-            className="h-11 w-auto"
-            priority
-          />
+          <div className="h-11 w-11 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
+            <span className="font-display text-base font-bold text-white">PL</span>
+          </div>
           <div className="text-left">
             <div className="font-display text-sm font-bold text-slate-900 leading-tight">
               みせPL
             </div>
             <div className="text-[10px] tracking-[0.2em] uppercase text-slate-500">
-              みせPL
+              Store P/L
             </div>
           </div>
         </div>

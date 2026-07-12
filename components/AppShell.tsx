@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { LogOut, Bell, Menu, X } from 'lucide-react';
 import { signOut } from '@/app/(auth)/actions';
 import { Sidebar } from './Sidebar';
@@ -48,20 +47,15 @@ export function AppShell({ children, profile, capabilities }: AppShellProps) {
               {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
             <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-              <Image
-                src="/koga-group-logo.png"
-                alt="みせPL"
-                width={840}
-                height={600}
-                className="h-9 w-auto flex-shrink-0"
-                priority
-              />
+              <div className="h-9 w-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+                <span className="font-display text-sm font-bold text-white">PL</span>
+              </div>
               <div className="hidden sm:block min-w-0">
                 <div className="font-display text-sm font-bold text-slate-900 leading-tight truncate">
                   みせPL
                 </div>
                 <div className="text-[10px] tracking-widest uppercase text-slate-500">
-                  みせPL
+                  Store P/L
                 </div>
               </div>
             </Link>

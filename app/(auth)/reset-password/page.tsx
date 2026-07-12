@@ -2,7 +2,6 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Mail,
   ArrowRight,
@@ -35,17 +34,12 @@ export default function ResetPasswordPage() {
 
         <div className="relative anim-in">
           <div className="flex items-center gap-4 mb-8">
-            <Image
-              src="/koga-group-logo.png"
-              alt="みせPL"
-              width={840}
-              height={600}
-              className="h-14 w-auto"
-              priority
-            />
+            <div className="h-14 w-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
+              <span className="font-display text-xl font-bold tracking-tight text-white">PL</span>
+            </div>
             <div>
-              <div className="font-display text-base font-bold tracking-tight">みせPL</div>
-              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">みせPL</div>
+              <div className="font-display text-2xl font-bold tracking-tight">みせPL</div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">Store P/L Console</div>
             </div>
           </div>
         </div>
@@ -81,16 +75,12 @@ export default function ResetPasswordPage() {
 
       <main className="flex-1 flex flex-col bg-white">
         <header className="lg:hidden border-b border-slate-200 px-5 py-4 flex items-center gap-3">
-          <Image
-            src="/koga-group-logo.png"
-            alt="みせPL"
-            width={840}
-            height={600}
-            className="h-9 w-auto"
-          />
+          <div className="h-9 w-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+            <span className="font-display text-sm font-bold text-white">PL</span>
+          </div>
           <div>
             <div className="font-display text-sm font-bold text-slate-900 leading-tight">みせPL</div>
-            <div className="text-[10px] tracking-widest uppercase text-slate-500">みせPL</div>
+            <div className="text-[10px] tracking-widest uppercase text-slate-500">Store P/L</div>
           </div>
         </header>
 
