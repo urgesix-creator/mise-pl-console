@@ -27,20 +27,20 @@ export const TAX_CATEGORY_LABEL: Record<TaxCategory, string> = {
   reduced: '軽減税率 8%（テイクアウト）',
 };
 
-// 選択肢（東南アジア向け）。weather は DB上は自由文字列。晴/曇/雨 に加え、
-// 突発的なスコールや「晴れ時々雨」を選べるようにする。雪は選択肢から除外（旧データ表示は維持）。
-export const WEATHER_OPTIONS = ['sunny', 'cloudy', 'rainy', 'squall', 'sunny_rain', 'other'] as const;
+// 選択肢（日本国内向け）。weather は DB上は自由文字列。晴/曇/雨/その他を選べる。
+// 天気は任意入力。旧データ（雪・スコール・晴れ時々雨）は選択肢から除外し、表示のみ維持する。
+export const WEATHER_OPTIONS = ['sunny', 'cloudy', 'rainy', 'other'] as const;
 export type Weather = (typeof WEATHER_OPTIONS)[number];
 
-// 表示ラベル。既存ラベル（晴/曇/雨/雪/その他）はExcel取込の互換のため変更しない。
-// 選択肢に加え、旧データ（snowy）の表示・取込のため広めに保持する（Record<string,string>）。
+// 表示ラベル。既存ラベル（晴/曇/雨/その他）はExcel取込の互換のため変更しない。
+// 選択肢に加え、旧データ（snowy／squall／sunny_rain）の表示・取込のため広めに保持する（Record<string,string>）。
 export const WEATHER_LABEL: Record<string, string> = {
   sunny: '晴',
   cloudy: '曇',
   rainy: '雨',
-  squall: 'スコール',
-  sunny_rain: '晴れ時々雨',
   other: 'その他',
+  squall: 'スコール', // 旧データ表示用（選択肢からは除外）
+  sunny_rain: '晴れ時々雨', // 旧データ表示用（選択肢からは除外）
   snowy: '雪', // 旧データ表示・Excel取込互換用（選択肢からは除外）
 };
 
