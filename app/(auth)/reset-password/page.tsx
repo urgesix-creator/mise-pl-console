@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
                       <input
                         type="email"
                         name="email"
-                        placeholder="name@koga-group.jp"
+                        placeholder="name@example.com"
                         required
                         autoFocus
                         className="w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-lg text-sm bg-white focus:border-brand-500 focus:ring-[3px] focus:ring-brand-500/15 transition-all"
