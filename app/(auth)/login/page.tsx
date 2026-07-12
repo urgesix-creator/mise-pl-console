@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Mail,
   Lock,
@@ -25,11 +24,20 @@ const initialState: LoginState = {};
 export default function LoginPage() {
   const [state, formAction] = useFormState(signIn, initialState);
   const [showPassword, setShowPassword] = useState(false);
-  const [now, setNow] = useState(new Date());
+  const [clock, setClock] = useState('');
   const [linkInvalid, setLinkInvalid] = useState(false);
 
+  // クライアントマウント後にのみ時刻を描画（SSRとの hydration mismatch を避ける）
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
+    const tick = () => {
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const s = String(d.getSeconds()).padStart(2, '0');
+      setClock(`${h}:${m}:${s}`);
+    };
+    tick();
+    const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -39,19 +47,6 @@ export default function LoginPage() {
       setLinkInvalid(true);
     }
   }, []);
-
-  const formatTime = (d: Date) => {
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    const s = String(d.getSeconds()).padStart(2, '0');
-    return `${h}:${m}:${s}`;
-  };
-
-  const getCityTime = (offsetHours: number) => {
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    const cityDate = new Date(utc + offsetHours * 3600000);
-    return formatTime(cityDate);
-  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col lg:flex-row">
@@ -70,17 +65,12 @@ export default function LoginPage() {
 
         <div className="relative anim-in">
           <div className="flex items-center gap-4 mb-8">
-            <Image
-              src="/koga-group-logo.png"
-              alt="みせPL"
-              width={840}
-              height={600}
-              className="h-14 w-auto"
-              priority
-            />
+            <div className="h-14 w-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
+              <span className="font-display text-xl font-bold tracking-tight text-white">PL</span>
+            </div>
             <div>
-              <div className="font-display text-base font-bold tracking-tight">みせPL</div>
-              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">みせPL</div>
+              <div className="font-display text-2xl font-bold tracking-tight">みせPL</div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-white/60">Store P/L Console</div>
             </div>
           </div>
 
@@ -113,29 +103,21 @@ export default function LoginPage() {
         </div>
 
         <div className="relative anim-in anim-delay-300">
-          <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 font-semibold mb-3">
-            World Time
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <CityClock label="Tokyo" time={getCityTime(9)} />
-            <CityClock label="Bangkok" time={getCityTime(7)} />
-            <CityClock label="Jakarta" time={getCityTime(7)} />
+          <div className="font-num text-4xl font-bold text-white tabular-nums">{clock}</div>
+          <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 font-semibold mt-1">
+            Tokyo · JST
           </div>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col bg-white">
         <header className="lg:hidden border-b border-slate-200 px-5 py-4 flex items-center gap-3">
-          <Image
-            src="/koga-group-logo.png"
-            alt="みせPL"
-            width={840}
-            height={600}
-            className="h-9 w-auto"
-          />
+          <div className="h-9 w-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+            <span className="font-display text-sm font-bold text-white">PL</span>
+          </div>
           <div>
             <div className="font-display text-sm font-bold text-slate-900 leading-tight">みせPL</div>
-            <div className="text-[10px] tracking-widest uppercase text-slate-500">みせPL</div>
+            <div className="text-[10px] tracking-widest uppercase text-slate-500">Store P/L</div>
           </div>
         </header>
 
@@ -299,11 +281,3 @@ function FeatureBox({
   );
 }
 
-function CityClock({ label, time }: { label: string; time: string }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
-      <div className="text-[10px] tracking-widest uppercase text-white/50 font-semibold mb-1">{label}</div>
-      <div className="font-num text-base font-bold text-white tabular-nums">{time}</div>
-    </div>
-  );
-}
