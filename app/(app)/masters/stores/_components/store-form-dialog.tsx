@@ -31,22 +31,6 @@ import type { Country, Currency, Store } from './types';
 
 const COPY_NONE = '__none__';
 
-const TIMEZONES: { value: string; label: string }[] = [
-  { value: 'Asia/Bangkok', label: 'バンコク (UTC+7)' },
-  { value: 'Asia/Jakarta', label: 'ジャカルタ (UTC+7)' },
-  { value: 'Asia/Tokyo', label: '東京 (UTC+9)' },
-  { value: 'Asia/Taipei', label: '台北 (UTC+8)' },
-];
-
-const COUNTRY_DEFAULTS: Record<string, { currencyId: string; timezone: string }> = {
-  th: { currencyId: 'thb', timezone: 'Asia/Bangkok' },
-  id: { currencyId: 'idr', timezone: 'Asia/Jakarta' },
-  jp: { currencyId: 'jpy', timezone: 'Asia/Tokyo' },
-  tw: { currencyId: 'twd', timezone: 'Asia/Taipei' },
-  vn: { currencyId: 'vnd', timezone: 'Asia/Ho_Chi_Minh' },
-  us: { currencyId: 'usd', timezone: 'America/Los_Angeles' },
-};
-
 const formSchema = z.object({
   name: z.string().trim().min(1, '店舗名を入力してください').max(100),
   country_id: z.string().min(1, '国を選択してください'),
@@ -182,19 +166,6 @@ export function StoreFormDialog({
   const country = countries.find((c) => c.id === watchedCountry);
   const currency = currencies.find((c) => c.id === watchedCurrency);
 
-  // Auto-update currency & timezone when country changes
-  const handleCountryChange = (value: string) => {
-    setValue('country_id', value, { shouldDirty: true });
-    const defaults = COUNTRY_DEFAULTS[value];
-    if (defaults) {
-      const hasCurrency = currencies.some((c) => c.id === defaults.currencyId);
-      if (hasCurrency) {
-        setValue('currency_id', defaults.currencyId, { shouldDirty: true });
-      }
-      setValue('timezone', defaults.timezone, { shouldDirty: true });
-    }
-  };
-
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
       const payload = {
@@ -323,81 +294,21 @@ export function StoreFormDialog({
               {errors.name && <FieldError>{errors.name.message}</FieldError>}
             </FieldGroup>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FieldGroup>
-                <Label htmlFor="country">
-                  国 <RequiredMark />
-                </Label>
-                <Controller
-                  control={control}
-                  name="country_id"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={handleCountryChange}>
-                      <SelectTrigger id="country">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.flag} {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.country_id && <FieldError>{errors.country_id.message}</FieldError>}
-              </FieldGroup>
-
-              <FieldGroup>
-                <Label htmlFor="currency">
-                  通貨 <RequiredMark />
-                </Label>
-                <Controller
-                  control={control}
-                  name="currency_id"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="currency">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencies.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.symbol} {c.code} ({c.name})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.currency_id && <FieldError>{errors.currency_id.message}</FieldError>}
-              </FieldGroup>
-            </div>
-
+            {/* 日本国内専用のため、国・通貨・タイムゾーンは日本で固定。
+                値はフォーム状態に保持し（hidden）、既存店の編集でも保存できるようにする。 */}
+            <input type="hidden" {...register('country_id')} />
+            <input type="hidden" {...register('currency_id')} />
+            <input type="hidden" {...register('timezone')} />
             <FieldGroup>
-              <Label htmlFor="timezone">
-                タイムゾーン <RequiredMark />
-              </Label>
-              <Controller
-                control={control}
-                name="timezone"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="timezone">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.timezone && <FieldError>{errors.timezone.message}</FieldError>}
+              <Label>国・通貨・タイムゾーン</Label>
+              <div className="rounded-lg bg-slate-50 border border-slate-100 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-700">
+                <span className="font-medium text-slate-900">🇯🇵 日本</span>
+                <span className="text-slate-300">·</span>
+                <span>円 (JPY)</span>
+                <span className="text-slate-300">·</span>
+                <span>東京 (UTC+9)</span>
+              </div>
+              <p className="text-[11px] text-slate-500">日本国内専用のため固定です。</p>
             </FieldGroup>
 
             <FieldGroup>
