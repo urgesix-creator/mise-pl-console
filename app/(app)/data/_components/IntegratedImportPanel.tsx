@@ -55,8 +55,6 @@ export function IntegratedImportPanel({ stores, selectedStoreId, userRole }: Pro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
-  // 取込先店舗のサービス料モード（true=込み）。プレビューでどちらで解釈するか明示するため
-  const [serviceFeeIncluded, setServiceFeeIncluded] = useState<boolean>(false);
 
   // 取込実行（書き込み）まわりの状態
   const [showConfirm, setShowConfirm] = useState(false);
@@ -105,7 +103,6 @@ export function IntegratedImportPanel({ stores, selectedStoreId, userRole }: Pro
         return;
       }
       setPreview(result.preview);
-      setServiceFeeIncluded(result.serviceFeeIncluded);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'プレビューの生成に失敗しました');
     } finally {
@@ -226,25 +223,13 @@ export function IntegratedImportPanel({ stores, selectedStoreId, userRole }: Pro
 
       {commitReport && <CommitResultView report={commitReport} />}
 
-      {/* 取込モードの明示（誤入力防止）：この店舗のサービス料設定でどう解釈するか */}
+      {/* 取込時の消費税の扱いを明示（誤入力防止） */}
       {preview && (
-        <div
-          className={
-            'rounded-xl border px-4 py-3 text-sm ' +
-            (serviceFeeIncluded
-              ? 'border-indigo-200 bg-indigo-50 text-indigo-900'
-              : 'border-slate-200 bg-slate-50 text-slate-700')
-          }
-        >
-          <span className="font-bold">
-            {serviceFeeIncluded ? 'サービス料込みモードで読み込みます' : 'サービス料別モードで読み込みます'}
-          </span>
-          ：
-          {serviceFeeIncluded
-            ? '「税抜売上」列の金額にはサービス料が含まれる前提です。本体（÷(1+料率)）を売上(net)として保存し、差額をサービス料に分離します。'
-            : '「税抜売上」列の金額は税抜本体として、そのまま売上(net)に保存します（サービス料は別途上乗せ算出）。'}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <span className="font-bold">標準税率10%で読み込みます</span>：
+          「税抜売上」列の金額を税抜本体として保存し、消費税額（税抜×10%・整数円）を自動計算します。
           <span className="block text-[11px] mt-1 opacity-80">
-            ※モードは取込先店舗の設定（売上入力の「サービス料込み/別」）に従います。変更は売上入力画面のトグルから。
+            ※Excel統合フォーマットには税区分列が無いため、取込は一律で標準税率10%になります。軽減税率8%（テイクアウト）の売上は、取込後に売上入力画面で税区分を修正してください。
           </span>
         </div>
       )}

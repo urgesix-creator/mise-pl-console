@@ -10,10 +10,14 @@ const storeFormSchema = z.object({
   country_id: z.string().min(1, '国を選択してください'),
   currency_id: z.string().min(1, '通貨を選択してください'),
   timezone: z.string().min(1, 'タイムゾーンを選択してください'),
+  // サービス料は日本の消費税制では使わない（常に0）。互換のため受け取るが 0 固定運用。
   service_fee_rate: z
     .number({ invalid_type_error: 'サービス料率を数値で入力してください' })
     .min(0, 'サービス料率は0以上で入力してください')
-    .max(1, 'サービス料率は100%以下で入力してください'),
+    .max(1, 'サービス料率は100%以下で入力してください')
+    .default(0),
+  // 軽減税率（テイクアウト8%）を使う店舗か
+  has_takeout: z.boolean().default(false),
   employee_rebate_rate: z
     .number({ invalid_type_error: '社員還付金率を数値で入力してください' })
     .min(0, '社員還付金率は0以上で入力してください')
@@ -79,6 +83,7 @@ export async function createStore(
       currency_id: parsed.data.currency_id,
       timezone: parsed.data.timezone,
       service_fee_rate: parsed.data.service_fee_rate,
+      has_takeout: parsed.data.has_takeout,
       employee_rebate_rate: parsed.data.employee_rebate_rate,
       fiscal_year_start_month: parsed.data.fiscal_year_start_month,
       is_weather_enabled: parsed.data.is_weather_enabled,
@@ -171,6 +176,7 @@ export async function updateStore(id: string, data: StoreFormData): Promise<Acti
       currency_id: parsed.data.currency_id,
       timezone: parsed.data.timezone,
       service_fee_rate: parsed.data.service_fee_rate,
+      has_takeout: parsed.data.has_takeout,
       employee_rebate_rate: parsed.data.employee_rebate_rate,
       fiscal_year_start_month: parsed.data.fiscal_year_start_month,
       is_weather_enabled: parsed.data.is_weather_enabled,

@@ -34,7 +34,6 @@ import type {
   ImportPreview,
   ImportPreviewRow,
 } from './integrated-import-types';
-import type { TaxBase } from '@/types/database';
 
 /** 取込可能ロール（staff は不可＝現場社員はインポート不可） */
 const IMPORT_ROLES = ['executive', 'country_rep', 'accounting', 'store_manager'] as const;
@@ -68,7 +67,6 @@ type DryRunInternal =
       preview: ImportPreview;
       storeId: string;
       supabase: SupabaseServerClient;
-      serviceFeeIncluded: boolean;
     };
 
 /** DBエラーを日本語化（既存 actions.ts の translateDbError と同方針） */
@@ -233,17 +231,12 @@ async function runDryRun(formData: FormData): Promise<DryRunInternal> {
     }
   }
 
-  // 取込先店舗のサービス料入力モードをそのまま適用（売上入力と同一の calculateSales 計算）
-  const serviceFeeIncluded = store.sales_service_fee_input_mode === 'included';
-
   // --- 検証＋プレビュー生成（純粋関数・内部で calculateSales 再計算） ---
+  // Excel統合フォーマットには税区分列が無いため、取込は標準税率10%（店内飲食）で再計算する。
   const ctx: BuildPreviewContext = {
     storeId,
     storeName: store.name,
-    serviceFeeRate: Number(store.service_fee_rate),
-    taxRate: Number(country.tax_rate),
-    taxBase: country.tax_base as TaxBase,
-    serviceFeeIncluded,
+    taxCategory: 'standard',
     deptNameToId,
     existingSales,
     existingDept,
@@ -253,7 +246,7 @@ async function runDryRun(formData: FormData): Promise<DryRunInternal> {
   };
 
   const preview = buildImportPreview(parsed.rows, ctx);
-  return { ok: true, preview, storeId, supabase, serviceFeeIncluded };
+  return { ok: true, preview, storeId, supabase };
 }
 
 // --------------------------------------------------------------------
@@ -267,7 +260,7 @@ async function runDryRun(formData: FormData): Promise<DryRunInternal> {
 export async function dryRunIntegratedImport(formData: FormData): Promise<DryRunResult> {
   const result = await runDryRun(formData);
   if (!result.ok) return { success: false, error: result.error };
-  return { success: true, preview: result.preview, serviceFeeIncluded: result.serviceFeeIncluded };
+  return { success: true, preview: result.preview };
 }
 
 // --------------------------------------------------------------------
@@ -283,6 +276,7 @@ type SalesUpsert = {
   gross_sales: number;
   service_fee: number;
   tax_amount: number;
+  tax_category: 'standard' | 'reduced';
   customer_count: number;
   weather: string | null;
   event_note: string | null;
@@ -300,24 +294,27 @@ type DeptUpsert = {
 
 /** プレビュー行（new/update のみ）から daily_sales UPSERT 配列を作る。
  *  値はサーバ再計算済み（input＋recalc）。客単価は保存しない。 */
-function buildSalesUpserts(rows: ImportPreviewRow[], serviceFeeIncluded: boolean): SalesUpsert[] {
+function buildSalesUpserts(rows: ImportPreviewRow[]): SalesUpsert[] {
   const out: SalesUpsert[] = [];
   for (const row of rows) {
     if (row.status !== 'new' && row.status !== 'update') continue;
     if (!row.key || !row.recalc || row.input.netSales === null) continue; // 念のための防御
+    // 税込は独立入力。空欄なら税抜＋消費税（recalc.taxAmount）を既定として保存する。
+    const grossInput = row.input.grossSales ?? 0;
+    const gross = grossInput > 0 ? grossInput : row.input.netSales + row.recalc.taxAmount;
     out.push({
       store_id: row.key.storeId,
       business_date: row.key.businessDate,
       day_period: 'all', // 全店all前提（マッチングキーの一部）
-      // 込み：本体（recalc.netSales）を保存。別：記入値そのまま（従来と完全同一）。
-      net_sales: serviceFeeIncluded ? row.recalc.netSales : row.input.netSales,
-      gross_sales: row.input.grossSales ?? 0, // 独立入力（税込）
-      service_fee: row.recalc.serviceFee, // サーバ再計算（§8.1・店舗モード適用）
-      tax_amount: row.recalc.taxAmount, // サーバ再計算（§8.1・店舗モード適用）
+      net_sales: row.input.netSales, // 記入値（税抜）そのまま
+      gross_sales: gross, // 独立入力（税込・空欄なら net+tax）
+      service_fee: 0, // 消費税制では常に0
+      tax_amount: row.recalc.taxAmount, // サーバ再計算（消費税・標準10%）
+      tax_category: 'standard', // Excelに税区分列が無いため標準税率で取込
       customer_count: row.input.customerCount ?? 0,
       weather: row.input.weather,
       event_note: row.input.eventNote,
-      service_fee_included: serviceFeeIncluded, // 行ごとにモードを記録（過去保護）
+      service_fee_included: false, // 消費税制では未使用
     });
   }
   return out;
@@ -361,10 +358,10 @@ export async function commitIntegratedImport(formData: FormData): Promise<Commit
   const result = await runDryRun(formData);
   if (!result.ok) return { success: false, error: result.error };
 
-  const { preview, supabase, serviceFeeIncluded } = result;
+  const { preview, supabase } = result;
   const { summary, rows } = preview;
 
-  const salesUpserts = buildSalesUpserts(rows, serviceFeeIncluded);
+  const salesUpserts = buildSalesUpserts(rows);
   const deptUpserts = buildDeptUpserts(rows);
 
   // 書き込み対象が0件（全行 error/skip）：DBは変更せず結果のみ返す

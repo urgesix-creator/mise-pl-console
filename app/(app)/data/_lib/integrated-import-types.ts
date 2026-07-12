@@ -146,7 +146,7 @@ export type ImportPreview = {
 
 /** ドライランAction の戻り値 */
 export type DryRunResult =
-  | { success: true; preview: ImportPreview; serviceFeeIncluded: boolean }
+  | { success: true; preview: ImportPreview }
   | { success: false; error: string };
 
 // --------------------------------------------------------------------

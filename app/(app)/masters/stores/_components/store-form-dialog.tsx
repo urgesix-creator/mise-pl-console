@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Loader2, Sun, CloudSun, Sparkles, Copy } from 'lucide-react';
+import { Loader2, Sun, CloudSun, Sparkles, Copy, ShoppingBag } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -52,10 +52,7 @@ const formSchema = z.object({
   country_id: z.string().min(1, '国を選択してください'),
   currency_id: z.string().min(1, '通貨を選択してください'),
   timezone: z.string().min(1, 'タイムゾーンを選択してください'),
-  service_fee_rate_pct: z
-    .number({ invalid_type_error: '数値で入力してください' })
-    .min(0, '0以上で入力してください')
-    .max(100, '100以下で入力してください'),
+  has_takeout: z.boolean(),
   employee_rebate_rate_pct: z
     .number({ invalid_type_error: '数値で入力してください' })
     .min(0, '0以上で入力してください')
@@ -107,7 +104,7 @@ export function StoreFormDialog({
           country_id: store.country_id,
           currency_id: store.currency_id,
           timezone: store.timezone,
-          service_fee_rate_pct: Math.round(store.service_fee_rate * 1000) / 10,
+          has_takeout: store.has_takeout ?? false,
           employee_rebate_rate_pct: Math.round(store.employee_rebate_rate * 1000) / 10,
           fiscal_year_start_month: store.fiscal_year_start_month,
           display_order: store.display_order,
@@ -120,7 +117,7 @@ export function StoreFormDialog({
           country_id: 'jp',
           currency_id: 'jpy',
           timezone: 'Asia/Tokyo',
-          service_fee_rate_pct: 0,
+          has_takeout: false,
           employee_rebate_rate_pct: 0,
           fiscal_year_start_month: 1,
           display_order: 0,
@@ -164,7 +161,7 @@ export function StoreFormDialog({
       setValue('country_id', src.country_id, { shouldDirty: true });
       setValue('currency_id', src.currency_id, { shouldDirty: true });
       setValue('timezone', src.timezone, { shouldDirty: true });
-      setValue('service_fee_rate_pct', Math.round(src.service_fee_rate * 1000) / 10, { shouldDirty: true });
+      setValue('has_takeout', src.has_takeout ?? false, { shouldDirty: true });
       setValue('employee_rebate_rate_pct', Math.round(src.employee_rebate_rate * 1000) / 10, { shouldDirty: true });
       setValue('fiscal_year_start_month', src.fiscal_year_start_month, { shouldDirty: true });
       setValue('is_weather_enabled', src.is_weather_enabled, { shouldDirty: true });
@@ -205,7 +202,8 @@ export function StoreFormDialog({
         country_id: values.country_id,
         currency_id: values.currency_id,
         timezone: values.timezone,
-        service_fee_rate: values.service_fee_rate_pct / 100,
+        service_fee_rate: 0, // 日本の消費税制ではサービス料は使わない（常に0）
+        has_takeout: values.has_takeout,
         employee_rebate_rate: values.employee_rebate_rate_pct / 100,
         fiscal_year_start_month: values.fiscal_year_start_month,
         display_order: values.display_order,
@@ -412,30 +410,21 @@ export function StoreFormDialog({
           </FormSection>
 
           <FormSection number="02" title="売上計算・月次PL設定">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FieldGroup>
-                <Label htmlFor="service_fee_rate_pct">
-                  サービス料率（%） <RequiredMark />
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="service_fee_rate_pct"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    className="pr-10 text-right font-num"
-                    {...register('service_fee_rate_pct', { valueAsNumber: true })}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
-                    %
-                  </span>
-                </div>
-                {errors.service_fee_rate_pct && (
-                  <FieldError>{errors.service_fee_rate_pct.message}</FieldError>
-                )}
-              </FieldGroup>
+            <Controller
+              control={control}
+              name="has_takeout"
+              render={({ field }) => (
+                <ToggleRow
+                  icon={ShoppingBag}
+                  title="テイクアウトあり（軽減税率8%を使う）"
+                  description="ONにすると日次売上入力で税区分（標準10%／軽減8%）を選べます。OFFなら常に標準10%。"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FieldGroup>
                 <Label htmlFor="employee_rebate_rate_pct">
                   社員還付金率（%） <RequiredMark />

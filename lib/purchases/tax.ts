@@ -5,15 +5,16 @@
 //   - 税別(excluded)：入力=net → tax=round(net×率), gross=net+tax
 //   - 税込(included)：入力=gross → net=round(gross/(1+率)), tax=gross-net
 //   - 非課税 or 税率0：税額0・gross=net（モード無関係）
-//   端数は四捨五入（Math.round＝正値は0.5切上げ）。整数通貨(IDR等)は整数丸め。
-//   ※売上の税計算(§8.1)とは無関係（仕入専用）。
+//   端数は四捨五入（Math.round＝正値は0.5切上げ）。整数通貨(JPY等)は整数丸め。
+//   ※日本の消費税：標準10% / 食材等の軽減8%。税率は取引先マスタ(suppliers.tax_rate)が一元管理。
+//   ※売上の消費税計算とは無関係（仕入専用）。
 // ====================================================================
 
 export type PurchaseTaxMode = 'excluded' | 'included';
 
 export type PurchaseTaxResult = { net: number; tax: number; gross: number };
 
-/** 整数丸めで扱う通貨（小数を持たない）。現状 IDR（ルピア）。必要に応じ追加。 */
+/** 整数丸めで扱う通貨（小数を持たない）。JPY（円）・IDR・VND 等。必要に応じ追加。 */
 const INTEGER_CURRENCIES = new Set(['idr', 'vnd', 'jpy']);
 
 export function isIntegerCurrency(currencyId: string | null | undefined): boolean {
@@ -24,10 +25,10 @@ export function computePurchaseTax(params: {
   /** 入力値（モードに応じ net か gross） */
   input: number;
   mode: PurchaseTaxMode;
-  /** 税率(%)。例 7, 11 */
+  /** 税率(%)。日本の消費税なら 10（標準）または 8（軽減・食材等） */
   ratePercent: number;
   isExempt: boolean;
-  /** 整数丸めの通貨か（IDR 等） */
+  /** 整数丸めの通貨か（JPY 等） */
   integerCurrency: boolean;
 }): PurchaseTaxResult {
   const { input, mode, ratePercent, isExempt, integerCurrency } = params;

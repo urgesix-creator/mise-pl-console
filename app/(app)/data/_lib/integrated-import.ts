@@ -22,8 +22,8 @@ import {
   grossNetDigitWarning,
   WEATHER_LABEL,
   type Weather,
+  type TaxCategory,
 } from '@/app/(app)/daily-input/sales/_schemas';
-import type { TaxBase } from '@/types/database';
 import type {
   ParseResult,
   ParsedRawRow,
@@ -282,11 +282,11 @@ export type ExistingSalesRow = {
 export type BuildPreviewContext = {
   storeId: string;
   storeName: string;
-  serviceFeeRate: number;
-  taxRate: number;
-  taxBase: TaxBase;
-  /** 店舗のサービス料入力モード（true=込み）。calculateSales へそのまま渡す（売上入力と同一計算） */
-  serviceFeeIncluded: boolean;
+  /**
+   * 取込行に適用する消費税区分（standard=10% / reduced=8%）。
+   * Excel統合フォーマットには税区分列が無いため、既定は standard（店内飲食10%）。
+   */
+  taxCategory?: TaxCategory;
   /** 当該店の有効部門：部門名 → department_id */
   deptNameToId: Map<string, string>;
   /** 既存 daily_sales（day_period='all'）：business_date → 行 */
@@ -469,19 +469,16 @@ function buildRow(parsed: ParsedRawRow, ctx: BuildPreviewContext, skippedDepartm
     };
   }
 
-  // --- 再計算（既存 calculateSales を改変せず使用・店舗モードをそのまま渡す） ----
+  // --- 再計算（消費税：税区分は既定 standard=10%。Excelに税区分列が無いため） ----
   const calc = calculateSales({
     netSales,
     grossSales,
-    serviceFeeRate: ctx.serviceFeeRate,
-    taxRate: ctx.taxRate,
-    taxBase: ctx.taxBase,
+    taxCategory: ctx.taxCategory ?? 'standard',
     customerCount,
-    serviceFeeIncluded: ctx.serviceFeeIncluded,
   });
   const recalc = {
-    netSales: calc.net_sales, // 込み時は本体（=記入÷(1+料率)）。別時は記入の round2
-    serviceFee: calc.service_fee,
+    netSales: calc.net_sales,
+    serviceFee: calc.service_fee, // 消費税制では常に0
     taxAmount: calc.tax_amount,
     avgPerCustomer: calc.avg_per_customer,
   };
