@@ -3,8 +3,8 @@ import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sales Console | KOGA Holdings',
-  description: 'KOGAホールディングス 海外飲食店 売上管理システム',
+  title: 'みせPL｜店舗経営ダッシュボード',
+  description: '飲食・小売の店舗経営を、日次入力から月次PL・粗利まで自動で見える化するツール',
 };
 
 export default function RootLayout({
