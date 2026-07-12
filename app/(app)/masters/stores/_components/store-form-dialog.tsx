@@ -117,14 +117,14 @@ export function StoreFormDialog({
         }
       : {
           name: '',
-          country_id: 'th',
-          currency_id: 'thb',
-          timezone: 'Asia/Bangkok',
-          service_fee_rate_pct: 10,
+          country_id: 'jp',
+          currency_id: 'jpy',
+          timezone: 'Asia/Tokyo',
+          service_fee_rate_pct: 0,
           employee_rebate_rate_pct: 0,
           fiscal_year_start_month: 1,
           display_order: 0,
-          is_weather_enabled: true,
+          is_weather_enabled: false,
           is_event_enabled: false,
           established_date: '',
         };
@@ -319,7 +319,7 @@ export function StoreFormDialog({
               <Input
                 id="name"
                 {...register('name')}
-                placeholder="例：あお季タイ、AOKI ロバタ"
+                placeholder="例：みせPL 渋谷店、居酒屋 まる"
                 autoFocus={mode === 'create'}
               />
               {errors.name && <FieldError>{errors.name.message}</FieldError>}

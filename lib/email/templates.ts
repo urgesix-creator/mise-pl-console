@@ -22,6 +22,12 @@ import type { Locale } from '@/lib/i18n/locales';
 // 型定義
 // ====================================================================
 
+// メールテンプレート内部で保持する言語キー。
+// アプリの表示ロケール（Locale）は国内MVPで 'ja' のみだが、
+// 過去の多言語テンプレート資産をそのまま保持するための内部型。
+// 実際に呼ばれるのは 'ja'（Locale のサブセット）のみ。
+type EmailLocale = 'ja' | 'en' | 'th' | 'id';
+
 export type EmailType = 'invitation' | 'passwordReset' | 'alertNotice' | 'inputReminder';
 
 export type EmailVariables = {
@@ -82,7 +88,7 @@ const wrapHtml = (innerContent: string): string => `<!DOCTYPE html>
 // 招待メール
 // ====================================================================
 
-const INVITATION: Record<Locale, (v: EmailVariables) => EmailRenderResult> = {
+const INVITATION: Record<EmailLocale, (v: EmailVariables) => EmailRenderResult> = {
   ja: (v) => ({
     subject: 'みせPL へのご招待',
     html: wrapHtml(`
@@ -225,7 +231,7 @@ Tautan ini berlaku selama ${v.expirationHours || 24} jam.
 // パスワードリセット
 // ====================================================================
 
-const PASSWORD_RESET: Record<Locale, (v: EmailVariables) => EmailRenderResult> = {
+const PASSWORD_RESET: Record<EmailLocale, (v: EmailVariables) => EmailRenderResult> = {
   ja: (v) => ({
     subject: 'パスワードリセットのご案内 - みせPL',
     html: wrapHtml(`
@@ -355,7 +361,7 @@ Tautan ini berlaku selama 1 jam.
 // 入力遅延リマインダー
 // ====================================================================
 
-const INPUT_REMINDER: Record<Locale, (v: EmailVariables) => EmailRenderResult> = {
+const INPUT_REMINDER: Record<EmailLocale, (v: EmailVariables) => EmailRenderResult> = {
   ja: (v) => ({
     subject: `【リマインド】${v.storeName} の${v.pendingDate}の入力が未完了です`,
     html: wrapHtml(`
@@ -458,7 +464,7 @@ ${v.inviteUrl}
 // アラート通知
 // ====================================================================
 
-const ALERT_NOTICE: Record<Locale, (v: EmailVariables) => EmailRenderResult> = {
+const ALERT_NOTICE: Record<EmailLocale, (v: EmailVariables) => EmailRenderResult> = {
   ja: (v) => ({
     subject: `【アラート】${v.storeName} - ${v.alertMessage}`,
     html: wrapHtml(`
@@ -556,7 +562,7 @@ Detail: ${v.inviteUrl}
 // 統合エクスポート
 // ====================================================================
 
-const TEMPLATES: Record<EmailType, Record<Locale, (v: EmailVariables) => EmailRenderResult>> = {
+const TEMPLATES: Record<EmailType, Record<EmailLocale, (v: EmailVariables) => EmailRenderResult>> = {
   invitation: INVITATION,
   passwordReset: PASSWORD_RESET,
   inputReminder: INPUT_REMINDER,

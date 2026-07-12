@@ -130,7 +130,7 @@ export function formatTime(date: Date | string, locale: Locale): string {
   return new Intl.DateTimeFormat(INTL_LOCALES[locale], {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: locale === 'en',
+    hour12: false,
   }).format(d);
 }
 
