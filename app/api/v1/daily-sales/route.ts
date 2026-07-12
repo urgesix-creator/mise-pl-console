@@ -60,30 +60,24 @@ export async function POST(req: Request) {
   const admin = createAdminClient();
   const { data: store } = await admin
     .from('stores')
-    .select('id, country_id, service_fee_rate, is_active')
+    .select('id, country_id, is_active, has_takeout')
     .eq('id', parsed.data.store_id)
     .maybeSingle();
   if (!store) return NextResponse.json({ error: '店舗が見つかりません' }, { status: 404 });
   if (!store.is_active) return NextResponse.json({ error: 'この店舗は無効化されています' }, { status: 409 });
-
-  const { data: country } = await admin
-    .from('countries')
-    .select('tax_rate, tax_base')
-    .eq('id', store.country_id)
-    .maybeSingle();
-  if (!country) return NextResponse.json({ error: '店舗の国情報が取得できません' }, { status: 409 });
 
   const isClosed = parsed.data.is_closed ?? false;
   const netInput = isClosed ? 0 : parsed.data.net_sales;
   const grossInput = isClosed ? 0 : (parsed.data.gross_sales ?? 0);
   const customerInput = isClosed ? 0 : parsed.data.customer_count;
 
+  // 税区分：軽減税率対応店（has_takeout）のときだけ受信値を採用。非対応店は常に標準10%。
+  const taxCategory = store.has_takeout ? (parsed.data.tax_category ?? 'standard') : 'standard';
+
   const calc = calculateSales({
     netSales: netInput,
     grossSales: grossInput,
-    serviceFeeRate: Number(store.service_fee_rate),
-    taxRate: Number(country.tax_rate),
-    taxBase: country.tax_base,
+    taxCategory,
     customerCount: customerInput,
   });
 
@@ -98,6 +92,7 @@ export async function POST(req: Request) {
         gross_sales: calc.gross_sales,
         service_fee: calc.service_fee,
         tax_amount: calc.tax_amount,
+        tax_category: taxCategory,
         customer_count: customerInput,
         weather: parsed.data.weather ?? null,
         event_note: parsed.data.event_note ?? null,

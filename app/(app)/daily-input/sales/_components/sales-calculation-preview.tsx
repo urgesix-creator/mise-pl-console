@@ -2,20 +2,21 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { calculateSales, grossNetDigitWarning, calcAvgPerCustomer } from '../_schemas';
-import type { TaxBase } from '@/types/database';
+import {
+  calculateSales,
+  grossNetDigitWarning,
+  calcAvgPerCustomer,
+  taxRateFor,
+  type TaxCategory,
+} from '../_schemas';
 
 type SalesCalculationPreviewProps = {
   netSales: number; // 主入力（税抜）
   grossSales: number; // 独立入力（税込）
   customerCount: number;
-  serviceFeeRate: number;
-  taxRate: number;
-  taxBase: TaxBase;
-  taxLabel: string;
+  /** 売上の税区分（standard=10% / reduced=8%） */
+  taxCategory: TaxCategory;
   currencyCode: string;
-  /** サービス料込みモード（true=込み）。プレビュー計算を保存時と一致させる */
-  serviceFeeIncluded?: boolean;
 };
 
 function formatMoney(n: number, decimals = 0): string {
@@ -27,33 +28,28 @@ function formatMoney(n: number, decimals = 0): string {
 }
 
 function formatPercent(rate: number): string {
-  return (rate * 100).toFixed(rate < 0.1 ? 2 : 1);
+  return (rate * 100).toFixed(rate < 0.1 && rate * 100 !== Math.round(rate * 100) ? 2 : 0);
 }
 
 export function SalesCalculationPreview({
   netSales,
   grossSales,
   customerCount,
-  serviceFeeRate,
-  taxRate,
-  taxBase,
-  taxLabel,
+  taxCategory,
   currencyCode,
-  serviceFeeIncluded = false,
 }: SalesCalculationPreviewProps) {
   const calc = useMemo(
     () =>
       calculateSales({
         netSales,
         grossSales,
-        serviceFeeRate,
-        taxRate,
-        taxBase,
+        taxCategory,
         customerCount,
-        serviceFeeIncluded,
       }),
-    [netSales, grossSales, serviceFeeRate, taxRate, taxBase, customerCount, serviceFeeIncluded],
+    [netSales, grossSales, taxCategory, customerCount],
   );
+
+  const taxRate = taxRateFor(taxCategory);
 
   // 客単価（参考・表示のみ）。
   //   税込：総売上（税込）÷ 客数（calculateSales が算出済み）
@@ -83,16 +79,8 @@ export function SalesCalculationPreview({
       />
 
       <Row
-        label="サービス料"
-        labelEn={`Service ${formatPercent(serviceFeeRate)}%`}
-        value={formatMoney(calc.service_fee)}
-        unit={currencyCode}
-        tone="secondary"
-      />
-
-      <Row
-        label={taxLabel || '税額'}
-        labelEn={`Tax ${formatPercent(taxRate)}%`}
+        label={`消費税（${formatPercent(taxRate)}%）`}
+        labelEn={`Consumption Tax ${formatPercent(taxRate)}%`}
         value={formatMoney(calc.tax_amount)}
         unit={currencyCode}
         tone="secondary"
@@ -101,8 +89,8 @@ export function SalesCalculationPreview({
       <div className="h-px bg-slate-200" />
 
       <Row
-        label="総売上（税込・入力値）"
-        labelEn="Gross Sales (input)"
+        label="総売上（税込）"
+        labelEn="Gross Sales"
         value={formatMoney(calc.gross_sales)}
         unit={currencyCode}
         tone="total"

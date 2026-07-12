@@ -1,8 +1,31 @@
 import { z } from 'zod';
-import type { TaxBase } from '@/types/database';
 
 export const DAY_PERIODS = ['all', 'lunch', 'dinner'] as const;
 export type DayPeriod = (typeof DAY_PERIODS)[number];
+
+// ====================================================================
+// 日本の消費税（消費税法）。売上の1日単位で税区分を選ぶ。
+//   standard（標準税率）= 10%
+//   reduced （軽減税率）=  8%（テイクアウト・持ち帰り等）
+// JPY は小数を持たないため税額・税込は整数円に丸める（四捨五入）。
+// ====================================================================
+export const TAX_CATEGORIES = ['standard', 'reduced'] as const;
+export type TaxCategory = (typeof TAX_CATEGORIES)[number];
+
+export const JP_TAX_RATES: Record<TaxCategory, number> = {
+  standard: 0.1,
+  reduced: 0.08,
+};
+
+/** 税区分に対応する消費税率（standard=0.10 / reduced=0.08） */
+export function taxRateFor(category: TaxCategory): number {
+  return JP_TAX_RATES[category] ?? JP_TAX_RATES.standard;
+}
+
+export const TAX_CATEGORY_LABEL: Record<TaxCategory, string> = {
+  standard: '標準税率 10%',
+  reduced: '軽減税率 8%（テイクアウト）',
+};
 
 // 選択肢（東南アジア向け）。weather は DB上は自由文字列。晴/曇/雨 に加え、
 // 突発的なスコールや「晴れ時々雨」を選べるようにする。雪は選択肢から除外（旧データ表示は維持）。
@@ -23,37 +46,31 @@ export const WEATHER_LABEL: Record<string, string> = {
 
 export const WRITE_ROLES = ['executive', 'country_rep', 'store_manager', 'staff'] as const;
 
-/** 金額を小数2桁に丸める（DECIMAL(12,2) に合わせる） */
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+/** JPY は小数を持たないため整数円に丸める（四捨五入） */
+function roundYen(n: number): number {
+  return Math.round(n);
 }
 
 export type SalesCalculation = {
   net_sales: number; // 税抜売上（主入力）
-  service_fee: number; // サービス料（自動計算）
-  tax_amount: number; // 税額（自動計算）
-  gross_sales: number; // 総売上・税込（独立入力。逆算しない）
+  service_fee: number; // サービス料。日本の消費税制では常に0（互換のため列は保持）
+  tax_amount: number; // 消費税額（自動計算＝net × 税区分の税率、整数円）
+  gross_sales: number; // 総売上・税込（独立入力。未入力なら net+tax を既定表示）
   avg_per_customer: number | null; // 客単価（自動計算 = gross ÷ 客数。表示用）
 };
 
 export type CalculateSalesInput = {
   /** 税抜売上（主入力）。予算・業績指標の基準 */
   netSales: number;
-  /** 総売上・税込（独立入力）。net から逆算せず、入力値をそのまま使う */
+  /**
+   * 総売上・税込（独立入力）。0/未入力のときは net + tax を既定値として返す
+   * （UI のプレフィル・保存時の既定）。正の値が入っていればそれをそのまま使う。
+   */
   grossSales: number;
-  /** 店舗マスタのサービス料率（0.10 = 10%） */
-  serviceFeeRate: number;
-  /** 国マスタの税率（0.07 = 7%） */
-  taxRate: number;
-  /** 国マスタの課税ベース */
-  taxBase: TaxBase;
+  /** 売上の税区分（standard=10% / reduced=8%）。店舗が軽減税率非対応なら常に standard */
+  taxCategory: TaxCategory;
   /** 客数 */
   customerCount: number;
-  /**
-   * サービス料込みモード（既定 false=「別」＝従来）。
-   * true=「込み」：入力税抜額には既にサービス料が含まれる。本体を分離して net_sales に保存する。
-   */
-  serviceFeeIncluded?: boolean;
 };
 
 /**
@@ -62,54 +79,34 @@ export type CalculateSalesInput = {
  */
 export function calcAvgPerCustomer(grossSales: number, customerCount: number): number | null {
   if (customerCount <= 0 || grossSales <= 0) return null;
-  return round2(grossSales / customerCount);
+  return roundYen(grossSales / customerCount);
 }
 
 /**
- * net_sales（税抜）を主入力とした順計算（data_model_v1.7 §8.1 を正典とする）。
+ * 日本の消費税に基づく売上の順計算。net_sales（税抜）が主入力。
  *
- *   service_fee = net_sales × service_fee_rate
- *   tax_amount  = net_sales × tax_rate                      （taxBase = 'net_sales'：タイ）
- *               = (net_sales + service_fee) × tax_rate       （taxBase = 'net_plus_service'：インドネシア）
- *   avg_per_customer = gross_sales ÷ customer_count          （分子は税込）
+ *   service_fee = 0                              （消費税制ではサービス料課税はしない）
+ *   tax_amount  = round(net_sales × 税率)         （税率 = 標準0.10 / 軽減0.08、整数円）
+ *   gross_sales = 入力があればその値、無ければ net + tax（既定プレフィル）
+ *   avg_per_customer = gross_sales ÷ customer_count（分子は税込）
  *
- * gross_sales（税込）は独立入力。入力値をそのまま保持し、net からは逆算しない。
- * 旧 divisor=(1+service)(1+tax) のインドネシア方式ハードコード逆算は撤廃。
- *
- * モード（serviceFeeIncluded）：
- *  - false（既定・「別」＝従来）：入力税抜をそのまま net_sales とし、service_fee=net×料率 を上乗せ。
- *    ＝従来式と完全同一（既存行は全て false 固定のため過去は不変）。
- *  - true（「込み」）：入力税抜額に既にサービス料が含まれる。
- *      本体 = 入力 ÷ (1 + 料率)、service_fee = 入力 − 本体、net_sales には【本体】を保存。
- *      課税ベースは net_plus_service なら 本体+service(=入力全体)、net_sales なら 本体のみ。
+ * 旧・海外税制（サービス料＋現地VAT・taxBase='net_plus_service' 逆算）は全廃。
  */
 export function calculateSales(input: CalculateSalesInput): SalesCalculation {
-  const { netSales, grossSales, serviceFeeRate, taxRate, taxBase, customerCount } = input;
-  const serviceFeeIncluded = input.serviceFeeIncluded ?? false;
+  const { netSales, grossSales, taxCategory, customerCount } = input;
 
-  const entered = netSales > 0 ? netSales : 0; // 入力された税抜額
-  const gross = grossSales > 0 ? grossSales : 0;
+  const net = roundYen(netSales > 0 ? netSales : 0);
+  const rate = taxRateFor(taxCategory);
+  const taxAmount = roundYen(net * rate);
 
-  let net: number; // 保存する net_sales（本体）
-  let serviceFee: number;
-  if (serviceFeeIncluded) {
-    // 「込み」：本体を分離。net_sales=本体・service_fee=入力−本体。
-    net = round2(entered / (1 + serviceFeeRate));
-    serviceFee = round2(entered - net);
-  } else {
-    // 「別」：従来式（入力をそのまま net とし、service を上乗せ算出）
-    net = round2(entered);
-    serviceFee = round2(net * serviceFeeRate);
-  }
-
-  const taxableBase = taxBase === 'net_plus_service' ? net + serviceFee : net;
-  const taxAmount = round2(taxableBase * taxRate);
+  // 総売上（税込）は独立入力。未入力（0以下）のときは net+tax を既定として返す。
+  const gross = grossSales > 0 ? roundYen(grossSales) : net + taxAmount;
 
   return {
     net_sales: net,
-    service_fee: serviceFee,
+    service_fee: 0, // 消費税制では常に0
     tax_amount: taxAmount,
-    gross_sales: round2(gross), // 独立入力値をそのまま（逆算しない）
+    gross_sales: gross,
     avg_per_customer: calcAvgPerCustomer(gross, customerCount),
   };
 }
@@ -160,6 +157,9 @@ export const upsertDailySalesSchema = z.object({
     .int('客数は整数で入力してください')
     .nonnegative('客数は0以上で入力してください')
     .max(100_000, '客数の上限を超えています'),
+  // 売上の税区分（standard=10% / reduced=8%）。未指定は standard 扱い。
+  // 店舗が軽減税率非対応（has_takeout=false）の場合はサーバ側で standard に強制する。
+  tax_category: z.enum(TAX_CATEGORIES).optional(),
   weather: z.string().nullable().optional(),
   event_note: z
     .string()

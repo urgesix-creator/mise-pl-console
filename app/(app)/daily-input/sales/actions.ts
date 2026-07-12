@@ -7,6 +7,7 @@ import {
   calculateSales,
   upsertDailySalesSchema,
   type DayPeriod,
+  type TaxCategory,
   type UpsertDailySalesInput,
 } from './_schemas';
 import type { TaxBase } from '@/types/database';
@@ -26,7 +27,8 @@ export type AccessibleStore = {
   tax_label: string;
   is_weather_enabled: boolean;
   is_event_enabled: boolean;
-  sales_service_fee_input_mode: 'excluded' | 'included'; // 売上の入力モード（別/込み・店舗共有）
+  /** 軽減税率（テイクアウト8%）を使う店舗か。true のとき税区分セレクタを表示 */
+  has_takeout: boolean;
 };
 
 export type DailySalesRow = {
@@ -38,6 +40,7 @@ export type DailySalesRow = {
   net_sales: number;
   service_fee: number;
   tax_amount: number;
+  tax_category: TaxCategory;
   customer_count: number;
   weather: string | null;
   event_note: string | null;
@@ -84,7 +87,7 @@ export async function getUserAccessibleStores(): Promise<AccessibleStore[]> {
     supabase
       .from('stores')
       .select(
-        'id, name, country_id, currency_id, service_fee_rate, is_weather_enabled, is_event_enabled, is_active, sales_service_fee_input_mode',
+        'id, name, country_id, currency_id, service_fee_rate, is_weather_enabled, is_event_enabled, is_active, has_takeout',
       )
       .eq('is_active', true)
       .order('display_order'),
@@ -108,8 +111,7 @@ export async function getUserAccessibleStores(): Promise<AccessibleStore[]> {
       tax_label: country?.tax_label ?? '',
       is_weather_enabled: s.is_weather_enabled,
       is_event_enabled: s.is_event_enabled,
-      sales_service_fee_input_mode:
-        (s.sales_service_fee_input_mode as 'excluded' | 'included') ?? 'excluded',
+      has_takeout: !!s.has_takeout,
     };
   });
 }
@@ -178,6 +180,7 @@ export async function getDailySalesByKey(
     net_sales: Number(data.net_sales),
     service_fee: Number(data.service_fee),
     tax_amount: Number(data.tax_amount),
+    tax_category: (data.tax_category as TaxCategory) ?? 'standard',
     customer_count: Number(data.customer_count),
     day_period: data.day_period as DayPeriod,
   };
@@ -202,10 +205,10 @@ export async function upsertDailySales(
     return { success: false, error: '日次売上の入力権限がありません' };
   }
 
-  // 店舗情報を取得（サービス料入力モードもサーバ側で権威として読む）
+  // 店舗情報を取得（軽減税率の可否＝has_takeout をサーバ側で権威として読む）
   const { data: storeData, error: storeError } = await supabase
     .from('stores')
-    .select('id, country_id, service_fee_rate, is_active, sales_service_fee_input_mode')
+    .select('id, country_id, is_active, has_takeout')
     .eq('id', parsed.data.store_id)
     .maybeSingle();
 
@@ -216,43 +219,30 @@ export async function upsertDailySales(
     return { success: false, error: 'この店舗は無効化されています' };
   }
 
-  const { data: country } = await supabase
-    .from('countries')
-    .select('tax_rate, tax_base')
-    .eq('id', storeData.country_id)
-    .maybeSingle();
-
-  if (!country) {
-    return { success: false, error: '店舗の国情報が取得できません' };
-  }
-
   // 全店 day_period='all' 運用。受信した day_period は無視し、常に 'all' で保存する
   // （昼夜分離は廃止。is_lunch_dinner_split は参照しない）。
 
   // 店休日（is_closed=true）は売上0で保存する。サーバ側でも 0 を強制し、
-  // net=0 を calculateSales に渡すことで service_fee / tax_amount も自動的に 0 になる
-  // （税計算 §8.1 calculateSales は変更しない）。
+  // net=0 を calculateSales に渡すことで tax_amount も自動的に 0 になる。
   const isClosed = parsed.data.is_closed ?? false;
   const netInput = isClosed ? 0 : parsed.data.net_sales;
   const grossInput = isClosed ? 0 : (parsed.data.gross_sales ?? 0);
   const customerInput = isClosed ? 0 : parsed.data.customer_count;
 
-  // サーバー側で再計算（クライアント側の値は信用しない）
-  // net_sales（税抜）を主入力とし、service_fee / tax_amount を net 基準で順計算。
-  // gross_sales（税込）は独立入力値をそのまま保存する（net からは逆算しない）。
-  // 桁違い警告（gross÷net）は表示用（preview）の注意喚起であり、保存はブロックしない。
-  const serviceFeeRate = Number(storeData.service_fee_rate);
-  const taxRate = Number(country.tax_rate);
-  // サービス料入力モードは店舗設定を権威として使う（クライアント値は採用しない）
-  const serviceFeeIncluded = storeData.sales_service_fee_input_mode === 'included';
+  // 税区分：店舗が軽減税率対応（has_takeout=true）のときだけクライアントの選択を採用。
+  // 非対応店では常に標準税率（standard=10%）に強制する（クライアント値は信用しない）。
+  const taxCategory: TaxCategory = storeData.has_takeout
+    ? (parsed.data.tax_category ?? 'standard')
+    : 'standard';
+
+  // サーバー側で再計算（クライアント側の値は信用しない）。
+  // net_sales（税抜）を主入力とし、消費税額を税区分の税率で順計算（整数円）。
+  // service_fee は消費税制では常に0。gross_sales は独立入力（未入力なら net+tax）。
   const calc = calculateSales({
     netSales: netInput,
     grossSales: grossInput,
-    serviceFeeRate,
-    taxRate,
-    taxBase: country.tax_base,
+    taxCategory,
     customerCount: customerInput,
-    serviceFeeIncluded,
   });
 
   const { data: upserted, error: upsertError } = await supabase
@@ -263,16 +253,17 @@ export async function upsertDailySales(
         business_date: parsed.data.business_date,
         day_period: 'all', // 全店 all 運用：受信値を無視して常に 'all' で保存
         net_sales: calc.net_sales, // 主入力（税抜）。店休日は0
-        gross_sales: calc.gross_sales, // 独立入力（税込）。逆算しない。店休日は0
-        service_fee: calc.service_fee, // 自動計算（net=0なら0）
-        tax_amount: calc.tax_amount, // 自動計算（net=0なら0）
+        gross_sales: calc.gross_sales, // 独立入力（税込・未入力なら net+tax）。店休日は0
+        service_fee: calc.service_fee, // 消費税制では常に0
+        tax_amount: calc.tax_amount, // 消費税額（net×税率、整数円。net=0なら0）
+        tax_category: taxCategory, // この行の税区分（standard=10% / reduced=8%）
         customer_count: customerInput, // 店休日は0
         weather: parsed.data.weather ?? null,
         event_note: parsed.data.event_note ?? null,
         is_closed: isClosed,
         is_holiday: parsed.data.is_holiday ?? false,
         holiday_name: parsed.data.holiday_name ?? null,
-        service_fee_included: serviceFeeIncluded, // この行の入力モードを記録（過去保護・行ごと固定）
+        service_fee_included: false, // 消費税制ではサービス料込みモードは使わない
       },
       { onConflict: 'store_id,business_date,day_period' },
     )
@@ -294,6 +285,7 @@ export async function upsertDailySales(
       net_sales: Number(upserted.net_sales),
       service_fee: Number(upserted.service_fee),
       tax_amount: Number(upserted.tax_amount),
+      tax_category: (upserted.tax_category as TaxCategory) ?? 'standard',
       customer_count: Number(upserted.customer_count),
       day_period: upserted.day_period as DayPeriod,
     },

@@ -15,7 +15,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { StoreDateSelector } from './store-date-selector';
 import { SalesInputForm, type SalesFormValues } from './sales-input-form';
 import { SalesCalculationPreview } from './sales-calculation-preview';
@@ -25,11 +24,11 @@ import {
 } from './department-sales-section';
 import {
   salesFormSchema,
+  taxRateFor,
   type DayPeriod,
 } from '../_schemas';
 import {
   upsertDailySales,
-  setSalesServiceFeeMode,
   type AccessibleStore,
   type DailySalesRow,
 } from '../actions';
@@ -52,6 +51,7 @@ const EMPTY_VALUES: SalesFormValues = {
   day_period: 'all',
   net_sales: 0,
   gross_sales: 0,
+  tax_category: 'standard',
   customer_count: 0,
   weather: '',
   event_note: '',
@@ -75,51 +75,20 @@ export function SalesInputClient({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [modePending, startModeChange] = useTransition();
-
   const selectedStore = useMemo(
     () => stores.find((s) => s.id === selectedStoreId) ?? null,
     [stores, selectedStoreId],
   );
 
-  // サービス料の入力モード（店舗単位で共有）。true=込み
-  const serviceFeeIncluded = selectedStore?.sales_service_fee_input_mode === 'included';
-
-  // モード切替（店舗共有・保存後リロードでプレビュー/保存を新モードに統一）
-  const changeServiceFeeMode = (mode: 'excluded' | 'included') => {
-    if (!selectedStoreId || mode === (serviceFeeIncluded ? 'included' : 'excluded')) return;
-    startModeChange(async () => {
-      const res = await setSalesServiceFeeMode(selectedStoreId, mode);
-      if (res.success) {
-        toast.success(mode === 'included' ? 'サービス料込みに切り替えました' : 'サービス料別に切り替えました');
-        router.refresh();
-      } else {
-        toast.error(res.error);
-      }
-    });
-  };
-
   // 全店 day_period='all' 運用。昼夜分離は廃止したため常に 'all'。
   const defaultDayPeriod: DayPeriod = 'all';
-
-  // 税抜欄の初期表示値：
-  //  - 「込み」モードでは、保存済み net_sales は「本体（÷(1+料率)後）」のため、そのまま欄に戻すと
-  //    上書き保存のたびに本体を再度 ÷(1+料率) して縮んでしまう（往復が非冪等）。
-  //    入力時の税込前総額＝ net_sales + service_fee を復元して表示し、保存で ÷(1+料率) すると
-  //    元の本体に戻る（冪等）。これにより訂正が正しく反映される。
-  //  - 「別」モードでは net_sales がそのまま入力値のため、保存済み net_sales をそのまま表示。
-  const netFieldValue = (rec: DailySalesRow): number => {
-    const net = Number(rec.net_sales);
-    if (!serviceFeeIncluded) return net; // 別：そのまま
-    const inclusive = net + Number(rec.service_fee); // 込み：入力時の総額を復元
-    return Math.round(inclusive * 100) / 100;
-  };
 
   const initialValues: SalesFormValues = initialRecord
     ? {
         day_period: initialRecord.day_period,
-        net_sales: netFieldValue(initialRecord),
+        net_sales: Number(initialRecord.net_sales),
         gross_sales: Number(initialRecord.gross_sales),
+        tax_category: initialRecord.tax_category ?? 'standard',
         customer_count: Number(initialRecord.customer_count),
         weather: initialRecord.weather ?? '',
         event_note: initialRecord.event_note ?? '',
@@ -142,12 +111,11 @@ export function SalesInputClient({
     defaultValues: initialValues,
   });
 
-  // 店舗・日付・既存レコード・サービス料モードが変化したらフォームをリセット
-  // （モード切替で税抜欄の表現＝込み:総額／別:本体 が変わるため serviceFeeIncluded も依存に含める）
+  // 店舗・日付・既存レコードが変化したらフォームをリセット
   useEffect(() => {
     reset(initialValues);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStoreId, selectedDate, initialRecord?.id, serviceFeeIncluded]);
+  }, [selectedStoreId, selectedDate, initialRecord?.id]);
 
   // （昼夜分離は廃止。day_period の補正effect・URL period 反映は撤去。常に 'all'）
 
@@ -155,6 +123,7 @@ export function SalesInputClient({
   const watchedGross = watch('gross_sales');
   const watchedCount = watch('customer_count');
   const watchedClosed = watch('is_closed');
+  const watchedTaxCategory = watch('tax_category');
 
   // 店休日に切り替えたら売上系を0にクリア（無効化と整合・保存値も0になる）
   useEffect(() => {
@@ -165,6 +134,19 @@ export function SalesInputClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedClosed]);
+
+  // 総売上（税込）のプレフィル：ユーザーが未入力（0/空）のとき、税抜＋消費税＝net+tax を
+  // 既定として自動表示する。ユーザーが手入力（正の値）していれば上書きしない。
+  useEffect(() => {
+    if (watchedClosed) return;
+    const net = Number(watchedNet) || 0;
+    const gross = Number(watchedGross) || 0;
+    if (net > 0 && gross <= 0) {
+      const rate = taxRateFor(watchedTaxCategory ?? 'standard');
+      setValue('gross_sales', Math.round(net * (1 + rate)), { shouldDirty: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedNet, watchedTaxCategory, watchedClosed]);
 
   const onSubmit = (values: SalesFormValues) => {
     if (!selectedStoreId || !selectedStore) {
@@ -180,6 +162,7 @@ export function SalesInputClient({
         day_period: values.day_period,
         net_sales: closed ? 0 : values.net_sales,
         gross_sales: closed ? 0 : values.gross_sales,
+        tax_category: values.tax_category ?? 'standard',
         customer_count: closed ? 0 : values.customer_count,
         weather: values.weather ? values.weather : null,
         event_note: values.event_note ? values.event_note : null,
@@ -226,7 +209,7 @@ export function SalesInputClient({
               日次売上入力
             </h1>
             <p className="text-sm text-slate-600">
-              税抜売上（ネット）を主入力。サービス料・税額・客単価は自動計算。総売上（税込）は独立入力です。
+              税抜売上（ネット）を主入力。消費税額・客単価は自動計算。総売上（税込）は独立入力（未入力なら税抜＋消費税を自動表示）です。
             </p>
           </div>
           {initialRecord && (
@@ -266,48 +249,6 @@ export function SalesInputClient({
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* サービス料の入力モード（税抜売上に対する扱い・店舗単位で共有） */}
-          <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                  税抜売上の入力方法
-                </div>
-                <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-                  <button
-                    type="button"
-                    disabled={!canWrite || modePending}
-                    onClick={() => changeServiceFeeMode('excluded')}
-                    className={cn(
-                      'px-3 py-1.5 text-sm font-semibold transition-colors disabled:opacity-60',
-                      !serviceFeeIncluded ? 'bg-brand-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50',
-                    )}
-                  >
-                    サービス料別
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canWrite || modePending}
-                    onClick={() => changeServiceFeeMode('included')}
-                    className={cn(
-                      'px-3 py-1.5 text-sm font-semibold border-l border-slate-200 transition-colors disabled:opacity-60',
-                      serviceFeeIncluded ? 'bg-brand-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50',
-                    )}
-                  >
-                    サービス料込み
-                  </button>
-                </div>
-              </div>
-              {modePending && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-              {serviceFeeIncluded
-                ? '「込み」：入力した税抜売上にサービス料が含まれます。本体（÷(1+料率)）を売上(net)として保存し、差額をサービス料として分離します。'
-                : '「別」：入力した税抜売上をそのまま売上(net)とし、サービス料（売上×料率）は別途算出します。'}
-              {' '}店舗共通の設定です（全員に反映・売上(net)はサービス料を含みません）。
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
             {/* 入力フォーム */}
             <SalesInputForm
@@ -325,12 +266,8 @@ export function SalesInputClient({
                 netSales={watchedClosed ? 0 : Number(watchedNet) || 0}
                 grossSales={watchedClosed ? 0 : Number(watchedGross) || 0}
                 customerCount={watchedClosed ? 0 : Number(watchedCount) || 0}
-                serviceFeeRate={selectedStore.service_fee_rate}
-                taxRate={selectedStore.tax_rate}
-                taxBase={selectedStore.tax_base}
-                taxLabel={selectedStore.tax_label}
+                taxCategory={watchedTaxCategory ?? 'standard'}
                 currencyCode={selectedStore.currency_id.toUpperCase()}
-                serviceFeeIncluded={serviceFeeIncluded}
               />
 
               {/* 保存ボタン：客単価のすぐ下（押し忘れ防止）。機能・ラベル・disabled条件は従来どおり */}

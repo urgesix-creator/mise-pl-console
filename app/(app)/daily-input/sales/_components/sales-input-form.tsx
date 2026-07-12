@@ -13,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DAY_PERIODS, WEATHER_LABEL, WEATHER_OPTIONS, type DayPeriod } from '../_schemas';
+import {
+  DAY_PERIODS,
+  WEATHER_LABEL,
+  WEATHER_OPTIONS,
+  TAX_CATEGORIES,
+  TAX_CATEGORY_LABEL,
+  type DayPeriod,
+  type TaxCategory,
+} from '../_schemas';
 import type { AccessibleStore } from '../actions';
 import { AmountInput } from './amount-input';
 
@@ -21,6 +29,7 @@ export type SalesFormValues = {
   day_period: DayPeriod;
   net_sales: number; // 主入力（税抜）
   gross_sales?: number; // 独立入力（税込）。net から自動算出しない
+  tax_category?: TaxCategory; // 税区分（standard=10% / reduced=8%）。未指定は standard
   customer_count: number;
   weather?: string | null;
   event_note?: string | null;
@@ -119,9 +128,43 @@ export function SalesInputForm({
           <p className="text-xs text-rose-600 font-medium">{errors.net_sales.message}</p>
         )}
         <p className="text-[11px] text-slate-500">
-          ネットセールス（税抜）を入力。予算・粗利の基準。サービス料・税額は自動計算されます。
+          ネットセールス（税抜）を入力。予算・粗利の基準。消費税額は自動計算されます。
         </p>
       </div>
+
+      {/* 税区分（軽減税率対応店＝has_takeout のときのみ表示）。非対応店は常に標準10%扱い */}
+      {store.has_takeout && (
+        <div className="space-y-1.5">
+          <Label htmlFor="tax_category" className="text-xs text-slate-700 font-semibold">
+            税区分（消費税）
+          </Label>
+          <Controller
+            control={control}
+            name="tax_category"
+            render={({ field }) => (
+              <Select
+                value={field.value ?? 'standard'}
+                onValueChange={(v) => field.onChange(v as TaxCategory)}
+                disabled={salesDisabled}
+              >
+                <SelectTrigger id="tax_category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TAX_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {TAX_CATEGORY_LABEL[c]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <p className="text-[11px] text-slate-500">
+            テイクアウト（持ち帰り）売上は軽減税率8%。店内飲食は標準税率10%。
+          </p>
+        </div>
+      )}
 
       {/* 総売上（税込・独立入力） */}
       <div className="space-y-1.5">
