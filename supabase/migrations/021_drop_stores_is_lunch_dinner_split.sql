@@ -1,0 +1,32 @@
+-- 021_drop_stores_is_lunch_dinner_split.sql
+--
+-- 目的：
+--   昼夜分離の廃止（全店 day_period='all' 運用）の最終ステップ（T4）として、
+--   不要になった stores.is_lunch_dinner_split カラムを削除する。
+--
+-- 経緯（順序）：
+--   T1: 売上入力（daily-input/sales）から参照を除去（day_period は常に 'all'）
+--   T2: 店舗マスタ（masters/stores）の UI・保存・一覧表示から除去
+--   T3: types/database.ts の型定義行を削除（tsc クリーン）
+--   T4: 本マイグレーション = カラム本体を DROP（最後）
+--
+-- 適用直前の依存確認（本マイグレーション作成時点・project cytubnofrcbmlnbfidsy）：
+--   - カラム実体  : boolean / NOT NULL / DEFAULT false（単純な bool カラム）
+--   - CHECK制約   : なし（pg_constraint に is_lunch_dinner_split を含む定義なし）
+--   - インデックス: なし（pg_indexes に該当なし）
+--   - ビュー      : なし（pg_depend 経由の依存ビューなし）
+--   - 関数/トリガ : なし（pg_get_functiondef に該当なし）
+--   → 依存オブジェクトが無いため、単純な DROP COLUMN で安全に削除可能。
+--
+-- 影響範囲：
+--   - 変更するのは stores.is_lunch_dinner_split の1カラムのみ。
+--   - stores の他カラム（name, country_id, currency_id, timezone, service_fee_rate,
+--     employee_rebate_rate, fiscal_year_start_month, is_weather_enabled, is_event_enabled,
+--     established_date, display_order, is_active 等）には触れない。
+--   - 他テーブル・経営データ（daily_sales）・月次PL・税計算には触れない。
+--   - daily_sales.day_period カラム / CHECK / UNIQUE キーには触れない（無関係）。
+--
+-- 冪等性：IF EXISTS により再実行しても安全。
+
+ALTER TABLE public.stores
+  DROP COLUMN IF EXISTS is_lunch_dinner_split;

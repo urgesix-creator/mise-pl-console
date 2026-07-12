@@ -1,0 +1,17 @@
+{
+  "name": "sales-console-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sales Console の REST API v1 を MCP ツールとして提供するサーバ（Claude Desktop/Code 連携用）",
+  "bin": {
+    "sales-console-mcp": "server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  }
+}

@@ -1,0 +1,30 @@
+﻿# 依存パッケージ（Mac側でnpm installすれば再生成される）
+/node_modules
+
+# Next.jsのビルド成果物（自動生成される）
+/.next/
+/out/
+
+# 環境変数（機密情報・絶対に公開しない）
+.env
+.env.local
+.env*.local
+
+# ログ・デバッグ
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScriptのビルドキャッシュ
+*.tsbuildinfo
+next-env.d.ts
+
+# OS・エディタが作る一時ファイル
+.DS_Store
+Thumbs.db
+
+# バックアップファイル（一時的、Git管理しない）
+*.bak
+
+# Vercel
+.vercel
