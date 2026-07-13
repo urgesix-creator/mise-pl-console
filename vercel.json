@@ -5,10 +5,6 @@
     {
       "path": "/api/reports/daily",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/exchange-rates/sync",
-      "schedule": "0 0 1 * *"
     }
   ]
 }

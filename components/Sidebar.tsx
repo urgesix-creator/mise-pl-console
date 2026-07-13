@@ -9,7 +9,6 @@ import {
   Globe,
   Tag,
   Truck,
-  DollarSign,
   LayoutGrid,
   ClipboardEdit,
   Target,
@@ -96,7 +95,6 @@ const SECTIONS: NavSection[] = [
       { href: '/masters/categories', label: '仕入カテゴリ', icon: Tag, capability: 'store_master' },
       { href: '/masters/suppliers', label: '仕入先', icon: Truck, capability: 'store_master' },
       { href: '/masters/departments', label: '部門マスタ', icon: LayoutGrid, capability: 'store_master' },
-      { href: '/masters/exchange-rates', label: '為替レート', icon: DollarSign, capability: 'accounting_master' },
       // 権限設定・ユーザー管理・監査ログ・APIキーは「システム設定」の中（管理メニュー）から開く。
       // システム設定は、いずれかの管理機能にアクセスできる人に表示。
       {

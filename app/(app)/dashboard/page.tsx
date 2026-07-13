@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { loginUrl } from '@/lib/site';
-import { StaleRatesCard } from './_components/stale-rates-card';
 import {
   aggregateStorePeriod,
   computeStorePeriodMetrics,
@@ -184,7 +183,6 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mb-6 space-y-3">
-        <StaleRatesCard />
         {notEnteredCount > 0 && (
           <div className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 flex items-center gap-2.5 text-sm text-rose-900">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />

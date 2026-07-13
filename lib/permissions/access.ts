@@ -19,7 +19,6 @@ export const PAGE_ACCESS: { prefix: string; anyOf: string[] }[] = [
   { prefix: '/daily-summary', anyOf: ['all_store_access', 'daily_input', 'targets'] },
   { prefix: '/purchase-summary', anyOf: ['all_store_access', 'daily_input'] },
   { prefix: '/data', anyOf: ['all_store_access', 'daily_input'] },
-  { prefix: '/masters/exchange-rates', anyOf: ['accounting_master'] },
   { prefix: '/masters/store-groups', anyOf: ['exec_master'] },
   { prefix: '/masters/stores', anyOf: ['exec_master'] },
   { prefix: '/masters/countries', anyOf: ['exec_master'] },

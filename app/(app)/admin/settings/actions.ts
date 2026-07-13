@@ -7,15 +7,13 @@
 // ====================================================================
 
 import { revalidatePath } from 'next/cache';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { roleHasCapability } from '@/lib/permissions/server';
 import { logAudit } from '@/lib/audit/server';
 import { buildDailyReportMessageForDate, getSlackWebhookUrl } from '@/lib/reports/daily';
 import { sendToSlack } from '@/lib/slack/templates';
-import { syncPreviousMonthEndRates } from '@/lib/exchange/sync';
 
 type Result = { success: true } | { success: false; error: string };
-type MessageResult = { success: true; message: string } | { success: false; error: string };
 
 async function ensureExec(): Promise<{ success: false; error: string } | null> {
   const supabase = await createClient();
@@ -89,35 +87,4 @@ export async function sendTestDailyReport(): Promise<Result> {
 
   await logAudit({ action: 'report.test_send', targetType: 'daily_report', targetLabel: date });
   return { success: true };
-}
-
-/** 前月末の為替レートを今すぐ取得して反映（手動トリガー・月次cronと同じ処理） */
-export async function syncExchangeRatesNow(): Promise<MessageResult> {
-  const denied = await ensureExec();
-  if (denied) return denied;
-
-  // 為替の書込は accounting_master 権限が必要なため admin 経由（system_settings 委任者でも実行可）
-  const result = await syncPreviousMonthEndRates(createAdminClient());
-
-  await logAudit({
-    action: 'exchange_rate.auto_sync',
-    targetType: 'exchange_rates',
-    targetLabel: result.effectiveDate,
-    details: { updated: result.updated.length, skipped: result.skipped.length },
-  });
-  revalidatePath('/masters/exchange-rates');
-  revalidatePath('/dashboard');
-
-  if (result.updated.length === 0) {
-    return {
-      success: false,
-      error: `前月末(${result.effectiveDate})のレートを取得できませんでした（対象通貨が未対応の可能性）`,
-    };
-  }
-  const detail = result.updated.map((u) => `${u.currency.toUpperCase()} ${u.rate}`).join(' / ');
-  const skip = result.skipped.length ? `／対象外 ${result.skipped.map((s) => s.toUpperCase()).join(',')}` : '';
-  return {
-    success: true,
-    message: `前月末(${result.effectiveDate})を反映：${detail}${skip}`,
-  };
 }

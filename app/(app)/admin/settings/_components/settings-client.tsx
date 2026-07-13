@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Settings as SettingsIcon, Loader2, Send, MessageSquare, RefreshCw, DollarSign } from 'lucide-react';
+import { ChevronRight, Settings as SettingsIcon, Loader2, Send, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { saveSlackWebhook, sendTestDailyReport, syncExchangeRatesNow } from '../actions';
+import { saveSlackWebhook, sendTestDailyReport } from '../actions';
 
 export type AdminLink = { href: string; label: string; desc: string };
 
@@ -23,15 +23,6 @@ export function SettingsClient({
   const [url, setUrl] = useState(slackWebhookUrl);
   const [saving, startSave] = useTransition();
   const [testing, startTest] = useTransition();
-  const [syncing, startSync] = useTransition();
-
-  const syncFx = () => {
-    startSync(async () => {
-      const res = await syncExchangeRatesNow();
-      if (res.success) toast.success(res.message);
-      else toast.error(res.error);
-    });
-  };
 
   const save = () => {
     startSave(async () => {
@@ -123,25 +114,6 @@ export function SettingsClient({
         </div>
         <p className="mt-2 text-[11px] text-amber-600">
           ※「テスト送信」は実際に Slack へ送信されます。先に「保存」してからお試しください。
-        </p>
-      </div>
-
-      {/* 為替レート自動取得 */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 mt-5">
-        <div className="flex items-center gap-2 mb-1">
-          <DollarSign className="w-4 h-4 text-slate-600" />
-          <h2 className="font-display text-base font-bold text-slate-900">為替レート自動取得（月末）</h2>
-        </div>
-        <p className="text-[12px] text-slate-500 mb-4">
-          毎月1日（JST 9:00・Vercel Cron）に <strong>前月末</strong>の各通貨→円レートを自動取得して反映します（月末レート方式）。
-          無料の為替API（ECB／AI不使用・鍵不要）を利用。ECB非対応の通貨（VND・TWD等）はスキップされます。
-        </p>
-        <Button variant="outline" onClick={syncFx} disabled={syncing}>
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          今すぐ前月末レートを取得
-        </Button>
-        <p className="mt-2 text-[11px] text-slate-500">
-          ※ 実行すると <code>exchange_rates</code> が更新され、当月の円換算が再計算されます。
         </p>
       </div>
 
