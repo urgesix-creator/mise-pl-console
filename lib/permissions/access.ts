@@ -21,7 +21,6 @@ export const PAGE_ACCESS: { prefix: string; anyOf: string[] }[] = [
   { prefix: '/data', anyOf: ['all_store_access', 'daily_input'] },
   { prefix: '/masters/store-groups', anyOf: ['exec_master'] },
   { prefix: '/masters/stores', anyOf: ['exec_master'] },
-  { prefix: '/masters/countries', anyOf: ['exec_master'] },
   { prefix: '/masters/categories', anyOf: ['store_master'] },
   { prefix: '/masters/suppliers', anyOf: ['store_master'] },
   { prefix: '/masters/departments', anyOf: ['store_master'] },

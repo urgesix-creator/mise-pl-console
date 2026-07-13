@@ -6,7 +6,6 @@ import {
   BarChart3,
   Store,
   Layers,
-  Globe,
   Tag,
   Truck,
   LayoutGrid,
@@ -91,7 +90,6 @@ const SECTIONS: NavSection[] = [
       // マスタ：能力で出し分け（PAGE_ACCESS と一致）
       { href: '/masters/stores', label: '店舗マスタ', icon: Store, capability: 'exec_master' },
       { href: '/masters/store-groups', label: '店舗グループ', icon: Layers, capability: 'exec_master' },
-      { href: '/masters/countries', label: '国マスタ', icon: Globe, capability: 'exec_master' },
       { href: '/masters/categories', label: '仕入カテゴリ', icon: Tag, capability: 'store_master' },
       { href: '/masters/suppliers', label: '仕入先', icon: Truck, capability: 'store_master' },
       { href: '/masters/departments', label: '部門マスタ', icon: LayoutGrid, capability: 'store_master' },
